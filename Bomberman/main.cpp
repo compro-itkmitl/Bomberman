@@ -235,12 +235,14 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 					}
 					normalBomb.Draw(window);
 				}
-				else if(Bomb_table[i][j].explode == 0 && table[i][j].object == 4)
+				else if(cur_time - Bomb_table[i][j].plant_time > 4.0f && Bomb_table[i][j].explode == 0)
 				{
+					add_bomb_to_queue(i, j);
 					Bomb_table[i][j].explode = 1;
 					Bomb_table[i][j].exploding_time = cur_time;
+					set_table_to_ground(i, j);
 				}
-
+				/*
 				if (Bomb_table[i][j].explode == 1 && cur_time - Bomb_table[i][j].exploding_time <= 0.1f)
 				{
 					Bomb_exploding(Bomb_table[i][j], window, cur_time, -1);
@@ -253,7 +255,9 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 						Bomb_table[i][j].explode = 0;
 					}	
 				}
+				*/
 			}
+			/*
 			if (Explode_table[i][j].set == 1)
 			{
 				if (cur_time - Explode_table[i][j].time <= 0.2f)
@@ -267,7 +271,23 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 					set_table_to_ground(i, j);
 				}
 			}
+			*/
 		}
+	
+	while (!queueBombpos.empty())
+	{
+		while (!queueBombpos.empty())
+		{
+			thisBombPos = queueBombpos.front();
+			printf("Boom : %d %d\n", thisBombPos.x, thisBombPos.y);
+			queueBombpos.pop();
+
+			find_fire_path(Bomb_table[thisBombPos.y][thisBombPos.x], cur_time, thisBombPos.y, thisBombPos.x);
+		}
+	}
+	
+
+
 }
 
 void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
@@ -275,7 +295,7 @@ void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
 	//Breadth-first search ( BFS )
 	int fire_range;
 	int fire_dir[4][2] = { {1, 0} , {0, 1} , {-1, 0} , {0, -1} };
-	int i, tmp_x, tmp_y;
+	int i, tmp_x, tmp_y, it;
 	for (i = 0; i < 4; i++)
 	{
 		tmp_x = x;
@@ -287,13 +307,19 @@ void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
 			tmp_y += fire_dir[i][1];
 			if (tmp_x >= 0 && tmp_x < table_scale_width && tmp_y >= 0 && tmp_y < table_scale_height)
 			{
-				if (table[tmp_y][tmp_x].object == 0)
+				it = table[tmp_y][tmp_x].object;
+				if (it == 0)
 				{
 					Explode_table[tmp_y][tmp_x].time = cur_time;
 					Explode_table[tmp_y][tmp_x].set = 1;
 					Explode_table[tmp_y][tmp_x].type = 1;
 					Explode_table[tmp_y][tmp_x].bomb_type = Bomb_table[y][x].bomb_type;
 					Explode_table[tmp_y][tmp_x].pos = set_fire_pos(tmp_y, tmp_x);
+				}
+				if (it == 4)
+				{
+					add_bomb_to_queue(tmp_y, tmp_x);
+					set_table_to_ground(tmp_y, tmp_x);
 				}
 				else
 				{
@@ -306,12 +332,15 @@ void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
 			}
 		}
 	}
-
-	Explode_table[y][x].time = cur_time;
-	Explode_table[y][x].set = 1;
-	Explode_table[y][x].type = 1;
-	Explode_table[y][x].bomb_type = Bomb_table[y][x].bomb_type;
-	Explode_table[y][x].pos = set_fire_pos(tmp_y, tmp_x);
+	if (Explode_table[tmp_y][tmp_x].set == 0)
+	{
+		Explode_table[y][x].time = cur_time;
+		Explode_table[y][x].set = 1;
+		Explode_table[y][x].type = 1;
+		Explode_table[y][x].bomb_type = Bomb_table[y][x].bomb_type;
+		Explode_table[y][x].pos = set_fire_pos(tmp_y, tmp_x);
+	}
+		
 }
 
 void Fire_exploding(Explode_mark thisFireExploding, sf::RenderWindow& window, float cur_time, int fire_type)
