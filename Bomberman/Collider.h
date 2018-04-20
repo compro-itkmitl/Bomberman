@@ -21,6 +21,7 @@ public:
 			return sf::Vector2f(25.0f, 25.0f);
 		if (type == 3)
 			return sf::Vector2f(15.0f, 15.0f);
+		return sf::Vector2f(25.0f, 25.0f);
 	}
 
 private:
