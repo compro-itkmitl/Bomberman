@@ -188,7 +188,7 @@ int main()
 		
 		generate_background(window, 0);
 		generate_immortal(window, player.GetCollider(), 0);
-		generate_bomb(window, player.GetCollider(), player.GetPosition(), global_time, 2);
+		generate_bomb(window, player.GetCollider(), player.GetPosition(), global_time, 1);
 
 		player.Draw(window);
 
@@ -221,28 +221,7 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 		{
 			if (table[i][j].object == 4)
 			{
-			
-				if (cur_time - Bomb_table[i][j].plant_time >= 3.5f)
-				{	
-					set_table_to_ground(i, j);
-					add_bomb_to_queue(i, j);
-					while (!queueBombpos.empty())
-					{
-						while (!queueBombpos.empty())
-						{
-							thisBombPos = queueBombpos.front();
-							if (Bomb_table[thisBombPos.y][thisBombPos.x].explode == 0 ||
-								(Bomb_table[thisBombPos.y][thisBombPos.x].explode == 1 &&
-									cur_time - Bomb_table[thisBombPos.y][thisBombPos.x].exploding_time <= 0.5f))
-								Explode_table[thisBombPos.y][thisBombPos.x].set = 1;
-							else
-								Explode_table[thisBombPos.y][thisBombPos.x].set = 0;
-							queueBombpos.pop();
-						}
-						Check_mark_table(window, cur_time);
-					}
-				}
-				else
+				if (cur_time - Bomb_table[i][j].plant_time <= 4.0f)
 				{
 					Bomb normalBomb(&normalBombTexture, Bomb_table[i][j].position, sf::Vector2u(4, 1), 0.2f);
 					BombAnimation bombAnimation(&normalBombTexture, sf::Vector2u(1, 4), 0.2f);
@@ -253,122 +232,16 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 					}
 					normalBomb.Draw(window);
 				}
+				else
+				{
+					Bomb_table[i][j].explode = 1;
+					Bomb_table[i][j].exploding_time = cur_time;
+				}
 				
 			}
 		}
 }
-void Check_mark_table(sf::RenderWindow& window, float cur_time)
-{
-	for (int i = 0; i < table_scale_height; i++)
-	{
-		for (int j = 0; j < table_scale_width; j++)
-		{
-			if (Explode_table[i][j].set != 0)
-			{
-				Explode_table[i][j].type = -1;
-				bomb_explosive(i, j, Bomb_table[i][j].bomb_type, cur_time, window);
-			}
-		}
-	}
-	for (int i = 0; i < table_scale_height; i++)
-	{
-		for (int j = 0; j < table_scale_width; j++)
-		{
-			if (Explode_table[i][j].set != 0)
-			{
-				
-			}
-		}
-	}
-}
 
-void bomb_explosive(int y, int x, int type, float cur_time, sf::RenderWindow& window)
-{
-	int range = Bomb_table[y][x].fire_range;
-	int temp_range;
-	int temp_y, temp_x;
-	int dir[4][2] = { {1, 0} , {0, 1} , {-1, 0} , {0, -1} };  // fire direction array
-
-	if (Bomb_table[y][x].explode == 0)
-	{
-		Bomb_table[y][x].explode = 1;
-		Bomb_table[y][x].exploding_time = cur_time;
-		Explode_table[y][x].time = cur_time;
-	}
-	if (cur_time - Bomb_table[y][x].exploding_time <= 0.5f)
-	{
-		Bomb_before_explode(Bomb_table[y][x], window, cur_time, -1); // -1 mean bomb start exploding
-	}
-	else if (cur_time - Bomb_table[y][x].exploding_time <= 1.0f)
-	{
-		for (int i = 0; i < 4; i++)
-		{
-			temp_range = range;
-			temp_y = y + dir[i][0];
-			temp_x = x + dir[i][1];
-			while ((temp_y < table_scale_height && temp_y >= 0) && (temp_x < table_scale_width && temp_x >= 0))
-			{
-				//--------------------------------Destroy-------------------------------
-				if (temp_range-- == 0)								  //out of fire range
-					break;
-				if (table[temp_y][temp_x].object == 99) //stone
-					break;
-				if (table[temp_y][temp_x].object == 1)  //block
-				{
-
-					if (type == 1) //normal bomb cant destroy block's stack
-						break;
-				}
-				if (table[temp_y][temp_x].object == 4)  //bomb
-				{
-					add_bomb_to_queue(temp_y, temp_x);
-					break;
-				}
-				if (table[temp_y][temp_x].object == 1)  //item
-				{
-
-				}
-				//--------------------------------Explode---------------------------------
-				if (temp_range == 0)
-				{
-					if (temp_y == y && temp_x < x) {
-
-						//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 3); // left end
-					}
-					else if (temp_y < y && temp_x == x) {
-
-						//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 4); // top end
-					}
-					else if (temp_y == y && temp_x > x) {
-
-						//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 5); // right end
-					}
-					else if (temp_y > y && temp_x == x) {
-
-						//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 6); // bottom end
-					}
-				}
-				else if (temp_y == y && temp_x == x) {
-
-					//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 0); // mid
-				}
-				else if (temp_y == y && (temp_x < x || temp_x > x)) {
-
-					//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 1); // left - right
-				}
-				else if ((temp_y < y || temp_y > y) && temp_x == x) {
-					Explode_table[temp_y][temp_x].type = 2;
-					//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 2); // top - bottom
-				}
-			}
-		}
-	}
-	else
-	{
-		Bomb_table[y][x].explode = 0;
-		Bomb_table[y][x].planted = 0;
-	}
-}
 
 void Bomb_before_explode(Bomb_info thisBombExploding, sf::RenderWindow& window, float cur_time, int fire_type)
 {
@@ -377,38 +250,38 @@ void Bomb_before_explode(Bomb_info thisBombExploding, sf::RenderWindow& window, 
 	{	
 		if (fire_type == -1)
 			explodingBombTexture.loadFromFile("./Sprite/Bomb/redBombExploding.png");
-		if (fire_type == 0)
-			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_mid.png");
 		if (fire_type == 1)
-			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_horizontal.png");
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_mid.png");
 		if (fire_type == 2)
-			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_vertical.png");
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_horizontal.png");
 		if (fire_type == 3)
-			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_horizontal_left.png");
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_vertical.png");
 		if (fire_type == 4)
-			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_vertical_top.png");
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_horizontal_left.png");
 		if (fire_type == 5)
-			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_horizontal_right.png");
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_vertical_top.png");
 		if (fire_type == 6)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_horizontal_right.png");
+		if (fire_type == 7)
 			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_vertical_bottom.png");
 	}
 	else
 	{
 		if (fire_type == -1)
 			explodingBombTexture.loadFromFile("./Sprite/Bomb/blueBombExploding.png");
-		if (fire_type == 0)
-			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_mid.png");
 		if (fire_type == 1)
-			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_horizontal.png");
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_mid.png");
 		if (fire_type == 2)
-			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_vertical.png");
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_horizontal.png");
 		if (fire_type == 3)
-			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_horizontal_left.png");
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_vertical.png");
 		if (fire_type == 4)
-			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_vertical_top.png");
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_horizontal_left.png");
 		if (fire_type == 5)
-			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_horizontal_right.png");
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_vertical_top.png");
 		if (fire_type == 6)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_horizontal_right.png");
+		if (fire_type == 7)
 			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_vertical_bottom.png");
 	}
 
