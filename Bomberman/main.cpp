@@ -18,7 +18,6 @@
 #include "Collider.h"
 #include "Immortal.h"
 using namespace std;
-
 //------------------struct  Bomb pos---------------------------------------
 typedef struct {
 	int x, y, type, fire_range;
@@ -71,6 +70,7 @@ typedef struct {
 	int bomb_type;
 	int planted;
 	int explode;
+	int own;
 	float plant_time;
 	float exploding_time;
 	sf::Vector2f position;
@@ -113,11 +113,11 @@ void generate_background(sf::RenderWindow& window, int map);
 void generate_immortal(sf::RenderWindow& window, Collider& player, int map);
 void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f player_pos, float cur_time, int type);
 void set_table_to_ground(int y, int x);
-void add_bomb_to_queue(int y, int x);
+void add_bomb_to_queue(int y, int x, int type);
 void Fire_exploding(Explode_mark thisFireExploding, sf::RenderWindow& window, float cur_time, int fire_type);
 void Bomb_exploding(Bomb_info thisBombExploding, sf::RenderWindow& window, float cur_time, int fire_type);
 void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x);
-sf::Vector2f check_set_bombPosition(sf::Vector2f thisPosition, float cur_time);
+sf::Vector2f check_set_bombPosition(sf::Vector2f thisPosition, float cur_time, int own);
 sf::Vector2f set_fire_pos(int y, int x);
 //---------------------------------- -------------------------------------------------------------------
 
@@ -152,7 +152,7 @@ int main()
 	sf::Clock clock;
 
 	generate_map();
-
+	player.planting = 0;
 	while (window.isOpen())
 	{
 		deltaTime = clock.restart().asSeconds();
@@ -177,15 +177,19 @@ int main()
 			*/
 		}
 
-
+		//printf("Planting : %d\n", player.planting);
+		
 		player.Update(deltaTime, PLAYER[0].switch_time); //deltaTime , switch time
-		if (player.planting == 1)
+		if (player.planting && PLAYER[0].used_bomb+1 <= PLAYER[0].bomb)
 		{
 			player.planting = 0;
-			sf::Vector2f currentPosition = check_set_bombPosition(player.GetPosition(), global_time);
+			sf::Vector2f currentPosition = check_set_bombPosition(player.GetPosition(), global_time, 0);
+			
+			//printf("%d/%d\n", PLAYER[0].used_bomb, PLAYER[0].bomb);
+			//_sleep(200);
 		}
-
-
+		player.planting = 0;
+		//printf("%d/%d\n", PLAYER[0].used_bomb, PLAYER[0].bomb);
 		window.clear(sf::Color::Green);
 
 		
@@ -236,43 +240,15 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 					}
 					normalBomb.Draw(window);
 				}
-				else if(cur_time - Bomb_table[i][j].plant_time > 4.0f && Bomb_table[i][j].explode == 0)
+				else if (cur_time - Bomb_table[i][j].plant_time > 4.0f && Bomb_table[i][j].explode == 0)
 				{
-					add_bomb_to_queue(i, j);
+					add_bomb_to_queue(i, j, Bomb_table[i][j].bomb_type);
 					Bomb_table[i][j].explode = 1;
 					Bomb_table[i][j].exploding_time = cur_time;
-					set_table_to_ground(i, j);
-				}
-				/*
-				if (Bomb_table[i][j].explode == 1 && cur_time - Bomb_table[i][j].exploding_time <= 0.1f)
-				{
-					Bomb_exploding(Bomb_table[i][j], window, cur_time, -1);
-				}
-				else
-				{	
-					if (Bomb_table[i][j].explode == 1)
-					{
-						find_fire_path(Bomb_table[i][j], cur_time, i, j);
-						Bomb_table[i][j].explode = 0;
-					}	
-				}
-				*/
-			}
-			/*
-			if (Explode_table[i][j].set == 1)
-			{
-				if (cur_time - Explode_table[i][j].time <= 0.2f)
-				{
-					Fire_exploding(Explode_table[i][j], window, cur_time, Explode_table[i][j].type);
-				}
-				else
-				{
-					Explode_table[i][j].set = 0;
-					Bomb_table[i][j].planted = 0;
+					//PLAYER[Bomb_table[i][j].own].used_bomb --;
 					set_table_to_ground(i, j);
 				}
 			}
-			*/
 		}
 	
 	while (!queueBombpos.empty())
@@ -280,19 +256,20 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 		while (!queueBombpos.empty())
 		{
 			thisBombPos = queueBombpos.front();
-			printf("Boom : %d %d\n", thisBombPos.x, thisBombPos.y);
+			//printf("Boom : %d %d\n", thisBombPos.x, thisBombPos.y);
 			Explode_table[thisBombPos.y][thisBombPos.x].set = 1;
 			Explode_table[thisBombPos.y][thisBombPos.x].pos = set_fire_pos(thisBombPos.y, thisBombPos.x);
-			Explode_table[thisBombPos.y][thisBombPos.x].bomb_type = Bomb_table[thisBombPos.y][thisBombPos.y].bomb_type;
+			Explode_table[thisBombPos.y][thisBombPos.x].bomb_type = thisBombPos.type;
 			Explode_table[thisBombPos.y][thisBombPos.x].time = cur_time;
 			Explode_table[thisBombPos.y][thisBombPos.x].type = 1;
 			queueBombpos.pop();
 
 			find_fire_path(Bomb_table[thisBombPos.y][thisBombPos.x], cur_time, thisBombPos.y, thisBombPos.x);
+			PLAYER[Bomb_table[thisBombPos.y][thisBombPos.x].own].used_bomb--;
 		}
 	}
 
-	for (int i = 0; i <= table_scale_height; i++)
+	for (int i = 0; i <= table_scale_height; i++) {
 		for (int j = 0; j <= table_scale_width; j++)
 		{
 			if (Explode_table[i][j].set)
@@ -305,6 +282,7 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 				else if (count_down > 0.1f && count_down <= 0.2f)
 				{
 					Fire_exploding(Explode_table[i][j], window, cur_time, Explode_table[i][j].type);
+					printf("%d ", Explode_table[i][j].type);
 				}
 				else
 				{
@@ -312,6 +290,7 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 				}
 			}
 		}
+	}
 	
 }
 
@@ -330,7 +309,7 @@ void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
 		{
 			tmp_x += fire_dir[i][0];
 			tmp_y += fire_dir[i][1];
-			if (tmp_x >= 0 && tmp_x < table_scale_width && tmp_y >= 0 && tmp_y < table_scale_height)
+			if (tmp_x >= 0 && tmp_x <= table_scale_width && tmp_y >= 0 && tmp_y <= table_scale_height)
 			{
 				it = table[tmp_y][tmp_x].object;
 				if (it == 0 && !Explode_table[tmp_y][tmp_x].set)
@@ -338,12 +317,12 @@ void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
 					Explode_table[tmp_y][tmp_x].time = cur_time;
 					Explode_table[tmp_y][tmp_x].set = 1;
 					Explode_table[tmp_y][tmp_x].type = set_fire_type(y, x, tmp_y, tmp_x, fire_range);
-					Explode_table[tmp_y][tmp_x].bomb_type = Bomb_table[y][x].bomb_type;
+					Explode_table[tmp_y][tmp_x].bomb_type = Explode_table[y][x].bomb_type;
 					Explode_table[tmp_y][tmp_x].pos = set_fire_pos(tmp_y, tmp_x);
 				}
-				if (it == 4)
+				else if (it == 4)
 				{
-					add_bomb_to_queue(tmp_y, tmp_x);
+					add_bomb_to_queue(tmp_y, tmp_x, thisBombExploding.bomb_type);
 					set_table_to_ground(tmp_y, tmp_x);
 				}
 				else
@@ -506,7 +485,7 @@ sf::Vector2f set_fire_pos(int y, int x)
 	return sf::Vector2f(battle_table_x + x*50, battle_table_y + y*50);
 }
 
-sf::Vector2f check_set_bombPosition(sf::Vector2f thisPosition, float cur_time)
+sf::Vector2f check_set_bombPosition(sf::Vector2f thisPosition, float cur_time, int own)
 {
 	thisPosition.x = ((thisPosition.x - battle_table_x + 25) / 50);
 	thisPosition.y = ((thisPosition.y - battle_table_y + 25) / 50);
@@ -516,14 +495,16 @@ sf::Vector2f check_set_bombPosition(sf::Vector2f thisPosition, float cur_time)
 	if (table[pos_y][pos_x].object == 0)
 	{
 		Bomb_table[pos_y][pos_x].fire_range = PLAYER[0].fire_range;
-		Bomb_table[pos_y][pos_x].bomb_type = 1;
+		Bomb_table[pos_y][pos_x].bomb_type = PLAYER[0].bomb_type;
 		Bomb_table[pos_y][pos_x].plant_time = cur_time;
 		Bomb_table[pos_y][pos_x].planted = 1;
 		Bomb_table[pos_y][pos_x].explode = 0;
+		Bomb_table[pos_y][pos_x].own = own;
 		Bomb_table[pos_y][pos_x].position = sf::Vector2f(battle_table_x + pos_x*50, battle_table_y + pos_y*50);
 		table[pos_y][pos_x].object = 4;
 		table[pos_y][pos_x].meterial = '+';
-		printf("\nBomb position :: %d %d\n", battle_table_x + pos_x * 50, battle_table_y + pos_y * 50);
+		PLAYER[own].used_bomb++;
+		//printf("\nBomb position :: %d %d\n", battle_table_x + pos_x * 50, battle_table_y + pos_y * 50);
 	}
 	
 	return sf::Vector2f((float)pos_x, (float)pos_y);
@@ -629,6 +610,7 @@ void set_player_info()
 		PLAYER[i].switch_time = 0.125f;
 		PLAYER[i].speed = 100.0f;
 		PLAYER[i].fire_range = 1;
+		PLAYER[i].used_bomb = 0;
 		PLAYER[i].bomb = 1;
 		PLAYER[i].bomb_limit = 10;
 		PLAYER[i].bomb_type = 1;

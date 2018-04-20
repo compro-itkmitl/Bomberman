@@ -5,7 +5,6 @@
 #include <iostream>
 #include <queue>
 
-
 Player::Player(sf::Texture* texture, sf::Vector2u imageCount, float switchTime, float speed, sf::Vector2f pos) :
 	animation(texture, imageCount, switchTime)
 {

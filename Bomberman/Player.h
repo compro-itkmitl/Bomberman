@@ -14,7 +14,7 @@ public:
 	sf::Vector2f GetPosition() { return body.getPosition(); }
 	Collider GetCollider() { return Collider(body); }
 
-	int planting;
+	int planting = 0;
 
 private:
 	sf::RectangleShape body;
