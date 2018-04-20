@@ -157,8 +157,13 @@
   <ItemGroup>
     <ClCompile Include="Bomb.cpp" />
     <ClCompile Include="BombAnimation.cpp" />
+    <ClCompile Include="BombExploding.cpp" />
+    <ClCompile Include="BombExplodingAnim.cpp" />
     <ClCompile Include="Collider.cpp" />
+    <ClCompile Include="Immortal.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MAP_GROUND.cpp" />
+    <ClCompile Include="MAP_OBJECT.cpp" />
     <ClCompile Include="Platform.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="PlayerAnimation.cpp" />
@@ -166,7 +171,12 @@
   <ItemGroup>
     <ClInclude Include="Bomb.h" />
     <ClInclude Include="BombAnimation.h" />
+    <ClInclude Include="BombExploding.h" />
+    <ClInclude Include="BombExplodingAnim.h" />
     <ClInclude Include="Collider.h" />
+    <ClInclude Include="Immortal.h" />
+    <ClInclude Include="MAP_GROUND.h" />
+    <ClInclude Include="MAP_OBJECT.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PlayerAnimation.h" />

@@ -3,72 +3,153 @@
 #include <iostream>
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
+#include <typeinfo>
 #include <queue>
 #include "PlayerAnimation.h"
 #include "Player.h"
 #include "Platform.h"
 #include "Bomb.h"
 #include "BombAnimation.h"
+#include "BombExploding.h"
+#include "BombExplodingAnim.h"
+#include "MAP_GROUND.h"
+#include "MAP_OBJECT.h"
+#include "Collider.h"
+#include "Immortal.h"
 using namespace std;
- 
-//---------------------Priority queue for generate UI to screen----------------------------
-struct Platform_Object {
-	sf::Texture thisTexture;
-	Player player;
-	PlayerAnimation thisPlayerAnim;
-	Bomb thisBomb;
-	BombAnimation thisBombAnim;
-	Platform thisPlatform;
-	int type;
-	char name[15];
 
-	bool operator < (const Platform_Object& a) const {
-		if (type > a.type) return true;
-		else return false;
-	}
-};
-//struct Platform_Object AnObject;
-priority_queue<Platform_Object> q_object;
-//---------------------End queue and struct for UI ------------------------------------------
+//------------------struct  Bomb pos---------------------------------------
+typedef struct {
+	int x, y, type, fire_range;
+}Bomb_explode_pos;
+Bomb_explode_pos thisBombPos;
+queue<Bomb_explode_pos> queueBombpos;
+//------------------struct fire pos-----------------------------------
+typedef struct {
+	int x, y, type;
+}Fire_range_pos;
+Fire_range_pos thisFirepos;
+queue<Fire_range_pos> queueFirepos;
+//-------------------struct item---------------------------------------
+typedef struct {
+	int x, y;
+	int item;
+}Item_destroy;
+Item_destroy thisItemPos;
+queue<Item_destroy> queueItempos;
 
-//---------------------------- Struct for Table(map)------------------------
+typedef struct {
+	int type, set;
+	float time;
+}Explode_mark;
+Explode_mark Explode_table[50][50];
+
+//-----------------------------Player information----------------------
+typedef struct {
+	float speed;
+	float switch_time;
+	int fire_range;
+	int bomb;
+	int used_bomb;
+	int bomb_limit;
+	int bomb_type;
+	int is_die;
+	sf::Texture playerTexture;
+	sf::Vector2f spawn_postion;
+	//------for bot-------
+	int des_x;
+	int des_y;
+	int have_des;
+}Player_info;
+Player_info PLAYER[5];  //P1 P2 BOT BOT BOT
+void set_player_info();
+
+typedef struct {
+	int fire_range;
+	int bomb_type;
+	int planted;
+	int explode;
+	float plant_time;
+	float exploding_time;
+	sf::Vector2f position;
+}Bomb_info;
+Bomb_info Bomb_table[50][50];
+
+
+//----------------------------------- Variables for Map-------------------------------
 typedef struct {
 	char object;
 	char meterial;
-	int check;
 }Table;
 Table table[50][50];
 int table_scale_height = 11;
-int table_scale_width = 17;
-void gen_map();
-//---------------------------------- End Table  -----------------------------
+int table_scale_width = 21;
+
+int resolution_x = 1280;
+int resolution_y = 960;
+
+int battle_table_x = (resolution_x / 2 - (table_scale_width / 2) * 50);
+int battle_table_y = (resolution_y / 2 - (table_scale_height / 2) * 50) + 75;
+
+void generate_map();
 
 
+typedef struct{
+	sf::Texture default_glass1;
+	sf::Texture default_glass2;
+	sf::Texture immortal;
+	sf::Texture Outside;
+	sf::Texture Object;
+	sf::Texture other[20];
+}Sprite_MAP;
+Sprite_MAP thisMAP[5];
+
+int check_pos_bomb_player(sf::Vector2f this_bomb, sf::Vector2f this_player);
+void set_sprite_map();
+void generate_background(sf::RenderWindow& window, int map);
+void generate_immortal(sf::RenderWindow& window, Collider& player, int map);
+void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f player_pos, float cur_time, int type);
+void bomb_explosive(int y, int x, int type, float cur_time, sf::RenderWindow& window);
+void set_table_to_ground(int y, int x);
+void add_bomb_to_queue(int y, int x);
+void Check_mark_table(sf::RenderWindow& window, float cur_time);
+void Bomb_before_explode(Bomb_info thisBombExploding, sf::RenderWindow& window, float cur_time, int fire_type);
+sf::Vector2f check_set_bombPosition(sf::Vector2f thisPosition, float cur_time);
+//---------------------------------- -------------------------------------------------------------------
+
+
+//---------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------Main------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
 int main()
 {
+	set_sprite_map();
+
 	printf("Start Program!!\n");
-	sf::RenderWindow window(sf::VideoMode(1024, 768), "SFML works!", sf::Style::Close | sf::Style::Resize);
+	sf::RenderWindow window(sf::VideoMode(resolution_x, resolution_y), "SFML works!", sf::Style::Close | sf::Style::Resize);
 
-	sf::Texture playerTexture;
-	playerTexture.loadFromFile("WhitePlayer.png");
 	
-	sf::Texture normalBombTexture;
-	normalBombTexture.loadFromFile("Bomb_sprite.png");
+	PLAYER[0].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
+	PLAYER[1].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
+	PLAYER[2].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
+	PLAYER[3].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
+	set_player_info();
 
-	Player player(&playerTexture, sf::Vector2u(3, 7), 0.15f, 100.0f);
-	PlayerAnimation animation(&playerTexture, sf::Vector2u(3, 7), 0.125f);    //0.2f is switchTime
+	Player player(&PLAYER[0].playerTexture, sf::Vector2u(3, 7), PLAYER[0].switch_time, PLAYER[0].speed, PLAYER[0].spawn_postion);
+	PlayerAnimation animation(&PLAYER[0].playerTexture, sf::Vector2u(3, 7), PLAYER[0].switch_time);    //0.2f is switchTime
 
-	//Bomb normalBomb(&normalBombTexture, sf::Vector2u(4, 1), 0.2f);
-	//BombAnimation bombAnimation(&normalBombTexture, sf::Vector2u(1, 4),0.2f);
-
-	//Platform platform1(nullptr, sf::Vector2f(50.0f, 50.0f), sf::Vector2f(75.0f, 75.0f)); //*17*11 512.0f, 384.0f + 42
-	//Platform platform2(nullptr, sf::Vector2f(75.0f, 75.0f), sf::Vector2f(500.0f, 100.0f));
-
-
+	
+	float global_time = 0;
 	float deltaTime = 0.0f;
 	sf::Clock clock;
 
-	gen_map();
+	generate_map();
+
 	while (window.isOpen())
 	{
 		deltaTime = clock.restart().asSeconds();
@@ -92,31 +173,426 @@ int main()
 			}
 			*/
 		}
-		
-		//normalBomb.Update(deltaTime, 0.2f);
-		player.Update(deltaTime, 0.125f); //switch time
-		
-		//normalBomb.GetCollider().CheckCollision(player.GetCollider(), 0.0f);
-		//platform1.GetCollider().CheckCollision(player.GetCollider(), 0.0f);
-		//platform2.GetCollider().CheckCollision(player.GetCollider(), 0.0f);
+
+
+		player.Update(deltaTime, PLAYER[0].switch_time); //deltaTime , switch time
+		if (player.planting == 1)
+		{
+			player.planting = 0;
+			sf::Vector2f currentPosition = check_set_bombPosition(player.GetPosition(), global_time);
+		}
+
 
 		window.clear(sf::Color::Green);
-	
-		//normalBomb.Draw(window);
-		player.Draw(window);
-		//platform1.Draw(window);
-		//platform2.Draw(window);
+
 		
+		generate_background(window, 0);
+		generate_immortal(window, player.GetCollider(), 0);
+		generate_bomb(window, player.GetCollider(), player.GetPosition(), global_time, 2);
+
+		player.Draw(window);
 
 		window.display();
+
+
+		global_time += deltaTime;
+		//printf("Global time : %f\n", global_time);
+		//printf("Delta time : %f\n", deltaTime);
+
 	}
-
 	
-
 	printf("End Program\n");
-
+	
 	return 0;
 }
+
+
+void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f player_pos, float cur_time, int type)
+{
+	sf::Texture normalBombTexture;
+	if(type == 1)
+	normalBombTexture.loadFromFile("./Sprite/Bomb/normalBomb.png");
+	else
+	normalBombTexture.loadFromFile("./Sprite/Bomb/pierceBomb.png");
+
+
+	for (int i = 0; i <= table_scale_height; i++)
+		for (int j = 0; j <= table_scale_width; j++)
+		{
+			if (table[i][j].object == 4)
+			{
+			
+				if (cur_time - Bomb_table[i][j].plant_time >= 3.5f)
+				{	
+					set_table_to_ground(i, j);
+					add_bomb_to_queue(i, j);
+					while (!queueBombpos.empty())
+					{
+						while (!queueBombpos.empty())
+						{
+							thisBombPos = queueBombpos.front();
+							if (Bomb_table[thisBombPos.y][thisBombPos.x].explode == 0 ||
+								(Bomb_table[thisBombPos.y][thisBombPos.x].explode == 1 &&
+									cur_time - Bomb_table[thisBombPos.y][thisBombPos.x].exploding_time <= 0.5f))
+								Explode_table[thisBombPos.y][thisBombPos.x].set = 1;
+							else
+								Explode_table[thisBombPos.y][thisBombPos.x].set = 0;
+							queueBombpos.pop();
+						}
+						Check_mark_table(window, cur_time);
+					}
+				}
+				else
+				{
+					Bomb normalBomb(&normalBombTexture, Bomb_table[i][j].position, sf::Vector2u(4, 1), 0.2f);
+					BombAnimation bombAnimation(&normalBombTexture, sf::Vector2u(1, 4), 0.2f);
+					normalBomb.Update(Bomb_table[i][j].plant_time, cur_time, 0.2f);
+					if (check_pos_bomb_player(normalBomb.GetPosition(), player_pos))
+					{
+						normalBomb.GetCollider().CheckCollision(player, 1.0f, 3, 1);
+					}
+					normalBomb.Draw(window);
+				}
+				
+			}
+		}
+}
+void Check_mark_table(sf::RenderWindow& window, float cur_time)
+{
+	for (int i = 0; i < table_scale_height; i++)
+	{
+		for (int j = 0; j < table_scale_width; j++)
+		{
+			if (Explode_table[i][j].set != 0)
+			{
+				Explode_table[i][j].type = -1;
+				bomb_explosive(i, j, Bomb_table[i][j].bomb_type, cur_time, window);
+			}
+		}
+	}
+	for (int i = 0; i < table_scale_height; i++)
+	{
+		for (int j = 0; j < table_scale_width; j++)
+		{
+			if (Explode_table[i][j].set != 0)
+			{
+				
+			}
+		}
+	}
+}
+
+void bomb_explosive(int y, int x, int type, float cur_time, sf::RenderWindow& window)
+{
+	int range = Bomb_table[y][x].fire_range;
+	int temp_range;
+	int temp_y, temp_x;
+	int dir[4][2] = { {1, 0} , {0, 1} , {-1, 0} , {0, -1} };  // fire direction array
+
+	if (Bomb_table[y][x].explode == 0)
+	{
+		Bomb_table[y][x].explode = 1;
+		Bomb_table[y][x].exploding_time = cur_time;
+		Explode_table[y][x].time = cur_time;
+	}
+	if (cur_time - Bomb_table[y][x].exploding_time <= 0.5f)
+	{
+		Bomb_before_explode(Bomb_table[y][x], window, cur_time, -1); // -1 mean bomb start exploding
+	}
+	else if (cur_time - Bomb_table[y][x].exploding_time <= 1.0f)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			temp_range = range;
+			temp_y = y + dir[i][0];
+			temp_x = x + dir[i][1];
+			while ((temp_y < table_scale_height && temp_y >= 0) && (temp_x < table_scale_width && temp_x >= 0))
+			{
+				//--------------------------------Destroy-------------------------------
+				if (temp_range-- == 0)								  //out of fire range
+					break;
+				if (table[temp_y][temp_x].object == 99) //stone
+					break;
+				if (table[temp_y][temp_x].object == 1)  //block
+				{
+
+					if (type == 1) //normal bomb cant destroy block's stack
+						break;
+				}
+				if (table[temp_y][temp_x].object == 4)  //bomb
+				{
+					add_bomb_to_queue(temp_y, temp_x);
+					break;
+				}
+				if (table[temp_y][temp_x].object == 1)  //item
+				{
+
+				}
+				//--------------------------------Explode---------------------------------
+				if (temp_range == 0)
+				{
+					if (temp_y == y && temp_x < x) {
+
+						//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 3); // left end
+					}
+					else if (temp_y < y && temp_x == x) {
+
+						//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 4); // top end
+					}
+					else if (temp_y == y && temp_x > x) {
+
+						//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 5); // right end
+					}
+					else if (temp_y > y && temp_x == x) {
+
+						//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 6); // bottom end
+					}
+				}
+				else if (temp_y == y && temp_x == x) {
+
+					//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 0); // mid
+				}
+				else if (temp_y == y && (temp_x < x || temp_x > x)) {
+
+					//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 1); // left - right
+				}
+				else if ((temp_y < y || temp_y > y) && temp_x == x) {
+					Explode_table[temp_y][temp_x].type = 2;
+					//Bomb_before_explode(Bomb_table[temp_y][temp_x], window, cur_time, 2); // top - bottom
+				}
+			}
+		}
+	}
+	else
+	{
+		Bomb_table[y][x].explode = 0;
+		Bomb_table[y][x].planted = 0;
+	}
+}
+
+void Bomb_before_explode(Bomb_info thisBombExploding, sf::RenderWindow& window, float cur_time, int fire_type)
+{
+	sf::Texture explodingBombTexture;
+	if (thisBombExploding.bomb_type == 1)
+	{	
+		if (fire_type == -1)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redBombExploding.png");
+		if (fire_type == 0)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_mid.png");
+		if (fire_type == 1)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_horizontal.png");
+		if (fire_type == 2)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_vertical.png");
+		if (fire_type == 3)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_horizontal_left.png");
+		if (fire_type == 4)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_vertical_top.png");
+		if (fire_type == 5)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_horizontal_right.png");
+		if (fire_type == 6)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/redfire_vertical_bottom.png");
+	}
+	else
+	{
+		if (fire_type == -1)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/blueBombExploding.png");
+		if (fire_type == 0)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_mid.png");
+		if (fire_type == 1)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_horizontal.png");
+		if (fire_type == 2)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_vertical.png");
+		if (fire_type == 3)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_horizontal_left.png");
+		if (fire_type == 4)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_vertical_top.png");
+		if (fire_type == 5)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_horizontal_right.png");
+		if (fire_type == 6)
+			explodingBombTexture.loadFromFile("./Sprite/Bomb/bluefire_vertical_bottom.png");
+	}
+
+
+		Bomb normalBomb(&explodingBombTexture, thisBombExploding.position, sf::Vector2u(4, 1), 0.05f);
+		BombAnimation bombAnimation(&explodingBombTexture, sf::Vector2u(1, 4), 0.125f);
+		normalBomb.Update(thisBombExploding.exploding_time, cur_time, 0.125f);
+			//normalBomb.GetCollider().CheckCollision(player, 1.0f, 3, 1);
+		normalBomb.Draw(window);
+
+}
+
+
+int check_pos_bomb_player(sf::Vector2f this_bomb, sf::Vector2f this_player)
+{
+	this_bomb.x = ((this_bomb.x - battle_table_x + 25) / 50);
+	this_bomb.y = ((this_bomb.y - battle_table_y + 25) / 50);
+	int bomb_x = (int)this_bomb.x;
+	int bomb_y = (int)this_bomb.y;
+
+	this_player.x = ((this_player.x - battle_table_x + 25) / 50);
+	this_player.y = ((this_player.y - battle_table_y + 25) / 50);
+	int player_x = (int)this_player.x;
+	int player_y = (int)this_player.y;
+
+	if (player_x == bomb_x && player_y == bomb_y) return 0;
+	else										  return 1;
+}
+
+sf::Vector2f check_set_bombPosition(sf::Vector2f thisPosition, float cur_time)
+{
+	thisPosition.x = ((thisPosition.x - battle_table_x + 25) / 50);
+	thisPosition.y = ((thisPosition.y - battle_table_y + 25) / 50);
+	int pos_x = (int)thisPosition.x;
+	int pos_y = (int)thisPosition.y;
+	
+	if (table[pos_y][pos_x].object == 0)
+	{
+		Bomb_table[pos_y][pos_x].fire_range = PLAYER[0].fire_range;
+		Bomb_table[pos_y][pos_x].bomb_type = 1;
+		Bomb_table[pos_y][pos_x].plant_time = cur_time;
+		Bomb_table[pos_y][pos_x].planted = 1;
+		Bomb_table[pos_y][pos_x].explode = 0;
+		Bomb_table[pos_y][pos_x].position = sf::Vector2f(battle_table_x + pos_x*50, battle_table_y + pos_y*50);
+		table[pos_y][pos_x].object = 4;
+		table[pos_y][pos_x].meterial = '+';
+		printf("\nBomb position :: %d %d\n", battle_table_x + pos_x * 50, battle_table_y + pos_y * 50);
+	}
+	
+	return sf::Vector2f((float)pos_x, (float)pos_y);
+}
+
+void set_sprite_map()
+{
+	// MAP 0
+	thisMAP[0].default_glass1.loadFromFile("./Sprite/AllMap/Map_Default/Ground.png");
+	thisMAP[0].default_glass2.loadFromFile("./Sprite/AllMap/Map_Default/Ground.png");
+	thisMAP[0].immortal.loadFromFile("./Sprite/AllMap/Map_Default/Immortal.png");
+	thisMAP[0].Outside.loadFromFile("./Sprite/AllMap/Map_Default/Outside.png");
+	thisMAP[0].Object.loadFromFile("./Sprite/AllMap/Map_Default/Object.png");
+
+}
+
+void generate_background(sf::RenderWindow& window, int map)
+{
+	sf::Vector2f g_scale = sf::Vector2f(50.0f, 50.0f);
+	sf::Vector2f g_pos;
+	for (int i = 1; i<=table_scale_height; i++)
+		for (int j = 1; j <=table_scale_width; j++)
+		{
+			g_pos = sf::Vector2f((float)battle_table_x + 50 * (j - 1), (float)battle_table_y + 50 * (i - 1));
+			MAP_GROUND ground_back(&thisMAP[map].default_glass1, &thisMAP[map].default_glass2, g_scale, g_pos, i, j);
+			ground_back.Draw(window);
+		}
+}
+
+void generate_immortal(sf::RenderWindow& window, Collider& player, int map)
+{
+	sf::Vector2f obj_scale = sf::Vector2f(60.0f, 70.0f);
+	sf::Vector2f obj_pos;
+	for (int i = -1; i<=table_scale_height; i++)
+		for (int j = -1; j <=table_scale_width; j++)
+		{
+			
+			obj_pos = sf::Vector2f(battle_table_x + 50 * (j), battle_table_y + 50 * (i));
+			if (i < 0 || i == table_scale_height || j < 0 || j == table_scale_width)
+			{
+				Immortal immortal(&thisMAP[map].Outside, obj_scale, obj_pos );
+				immortal.GetCollider().CheckCollision(player, 1.0f, 2, 1);
+				immortal.Draw(window);
+			}
+			else 
+			{
+				if (table[i][j].object == 1 || table[i][j].object == 2)   // generate object
+				{
+					MAP_OBJECT object(&thisMAP[map].Object, obj_scale, obj_pos );
+					object.GetCollider().CheckCollision(player, 1.0f, 2, 1);
+					object.Draw(window);
+				}
+				else if (table[i][j].object == 99)
+				{
+					Immortal immortal(&thisMAP[map].immortal, obj_scale, obj_pos);
+					immortal.GetCollider().CheckCollision(player, 1.0f, 2, 1);
+					immortal.Draw(window);
+				}
+			}
+		}
+
+	
+}
+void add_bomb_to_queue(int y, int x)
+{
+	thisBombPos.x = x;
+	thisBombPos.y = y;
+	thisBombPos.type = Bomb_table[y][x].bomb_type;
+	thisBombPos.fire_range = Bomb_table[y][x].fire_range;
+	queueBombpos.push(thisBombPos);
+}
+
+void set_player_info()
+{
+	/*
+	typedef struct {
+		float speed;
+		float switch_time;
+		int fire_range;
+		int bomb;
+		int used_bomb;
+		int bomb_limit;
+		int bomb_type;
+		int is_die;
+		sf::Texture playerTexture;
+		sf::Vector2f spawn_postion;
+		//------for bot-------
+		int des_x;
+		int des_y;
+		int have_des;
+	}Player_info;
+	*/
+	sf::Vector2f player_spawn_pos[5] = {
+		sf::Vector2f((float)battle_table_x, (float)battle_table_y),
+		sf::Vector2f((float)battle_table_x + 20 * 50, (float)battle_table_y),
+		sf::Vector2f((float)battle_table_x + 20 * 50, (float)battle_table_y),
+		sf::Vector2f((float)battle_table_x, (float)battle_table_y + 10 *50),
+		sf::Vector2f((float)battle_table_x + 20 * 50, (float)battle_table_y + 10 * 50),
+	};
+
+	for (int i = 0; i < 5; i++)
+	{
+		PLAYER[i].switch_time = 0.125f;
+		PLAYER[i].speed = 100.0f;
+		PLAYER[i].fire_range = 1;
+		PLAYER[i].bomb = 1;
+		PLAYER[i].bomb_limit = 10;
+		PLAYER[i].bomb_type = 1;
+		PLAYER[i].is_die = 0;
+		PLAYER[i].have_des = 0;
+		PLAYER[i].spawn_postion = player_spawn_pos[i];
+	}
+}
+
+void set_table_to_ground(int y, int x)
+{
+	table[y][x].object = 0;
+	table[y][x].meterial = '-';
+}
+
+void add_bomb_to_queue(int y, int x, int type)
+{
+	Bomb_explode_pos temp;
+	temp.x = x;
+	temp.y = y;
+	temp.type = type;
+	queueBombpos.push(temp);
+}
+//---------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------
+
 
 // ---------------------------------- Generate map -----------------------
 void set_table_to_default();
@@ -125,11 +601,11 @@ void generate_items(int num_items);
 void print_to_screen(int scale);
 int is_conner(int x, int y);
 
-void gen_map()
+void generate_map()
 {
 	set_table_to_default();
 	generate_blocks(75);
-	print_to_screen(3);
+	print_to_screen(2);
 }
 
 void print_to_screen(int scale)
@@ -163,13 +639,11 @@ void set_table_to_default()
 			{
 				table[i][j].object = 99; //99 = stone
 				table[i][j].meterial = ' ';
-				table[i][j].check = 0;
 			}
 			else
 			{
 				table[i][j].object = 0;
 				table[i][j].meterial = '-';
-				table[i][j].check = 0;
 			}
 		}
 	}
@@ -180,7 +654,7 @@ void generate_blocks(int num_blocks)
 	int i, j, number, count_way = 0, count_block = 0;
 	int mic[50];
 	for (i = 0; i<50; i++) mic[i] = 0;
-
+	srand(time(NULL));
 
 	for (i = 0; i<table_scale_height; i++)
 	{
@@ -189,13 +663,11 @@ void generate_blocks(int num_blocks)
 		{
 			if (table[i][j].object == 0 && is_conner(i, j))
 			{
-				srand(time(NULL));
 				number = (rand() % 100) + 1;
 				if (number < num_blocks || count_way >= 2 || mic[j] >= 2)
 				{
 					table[i][j].object = 1; //1 = Blocks
 					table[i][j].meterial = '=';
-					table[i][j].check = 1;
 					count_way = 0;
 					mic[j] = 0;
 					count_block++;
@@ -229,7 +701,6 @@ void generate_items(int blocks)
 		}
 		table[x][y].object = 2; //2 = item;
 		table[x][y].meterial = '?';
-		table[x][y].check = 1;
 	}
 
 }

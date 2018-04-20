@@ -1,16 +1,12 @@
 #include "Player.h"
 #include "Bomb.h"
+#include "Collider.h"
 #include <SFML\Graphics.hpp>
 #include <iostream>
 #include <queue>
 
-typedef struct {
-	int time, x, y;
-}Abomb;
 
-std::queue<Abomb> bomb_q;
-
-Player::Player(sf::Texture* texture, sf::Vector2u imageCount, float switchTime, float speed) :
+Player::Player(sf::Texture* texture, sf::Vector2u imageCount, float switchTime, float speed, sf::Vector2f pos) :
 	animation(texture, imageCount, switchTime)
 {
 	this->speed = speed;
@@ -18,8 +14,9 @@ Player::Player(sf::Texture* texture, sf::Vector2u imageCount, float switchTime, 
 	face = 2;
 	
 	body.setSize(sf::Vector2f(50.0f, 75.0f));
-	body.setOrigin(body.getSize() / 2.0f);
-	body.setPosition(200.0f, 200.0f);
+	body.setOrigin(25.0f, 55.0f);
+	body.setPosition(pos);
+	//body.setFillColor(sf::Color::Red);
 	body.setTexture(texture);
 }
 
@@ -37,9 +34,9 @@ void Player::Update(float deltaTime, float switchTime)
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))	movement.x += speed * deltaTime * switchTime;
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))	movement.y -= speed * deltaTime * switchTime;
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))	movement.y += speed * deltaTime * switchTime;
-
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::C) && bomb_q.size() < 4) {
-
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+	{
+		planting = 1;
 	}
 
 	if (movement.x == 0.0f && movement.y == 0.0f)

@@ -7,7 +7,7 @@ public:
 	BombAnimation(sf::Texture* texture, sf::Vector2u imageCount, float switchTime);
 	~BombAnimation();
 
-	void Update(int row, float deltaTime);
+	void Update(int row, float deltaTime, float start_time);
 
 public:
 	sf::IntRect uvRect;
@@ -18,5 +18,6 @@ private:
 
 	float totalTime;
 	float switchTime;
+
 };
 

@@ -5,10 +5,10 @@
 class Bomb
 {
 public:
-	Bomb(sf::Texture* texture, sf::Vector2u imageCount, float switchTime);
+	Bomb(sf::Texture* texture, sf::Vector2f bomb_pos, sf::Vector2u imageCount, float switchTime);
 	~Bomb();
 
-	void Update(float deltaTime, float switchTime);
+	void Update(float start_time, float deltaTime, float switchTime);
 	void Draw(sf::RenderWindow& window);
 
 	sf::Vector2f GetPosition() { return body.getPosition(); }
@@ -19,5 +19,6 @@ private:
 	BombAnimation animation;
 	unsigned int row;
 	float speed;
+
 };
 

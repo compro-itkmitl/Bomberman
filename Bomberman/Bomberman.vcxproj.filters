@@ -36,6 +36,21 @@
     <ClCompile Include="BombAnimation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MAP_GROUND.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Immortal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MAP_OBJECT.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BombExploding.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BombExplodingAnim.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PlayerAnimation.h">
@@ -54,6 +69,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="BombAnimation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MAP_GROUND.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Immortal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MAP_OBJECT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BombExploding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BombExplodingAnim.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
