@@ -107,6 +107,7 @@ typedef struct{
 Sprite_MAP thisMAP[5];
 
 int check_pos_bomb_player(sf::Vector2f this_bomb, sf::Vector2f this_player);
+int set_fire_type(int y1, int x1, int y2, int x2, int fire);
 void set_sprite_map();
 void generate_background(sf::RenderWindow& window, int map);
 void generate_immortal(sf::RenderWindow& window, Collider& player, int map);
@@ -280,14 +281,38 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 		{
 			thisBombPos = queueBombpos.front();
 			printf("Boom : %d %d\n", thisBombPos.x, thisBombPos.y);
+			Explode_table[thisBombPos.y][thisBombPos.x].set = 1;
+			Explode_table[thisBombPos.y][thisBombPos.x].pos = set_fire_pos(thisBombPos.y, thisBombPos.x);
+			Explode_table[thisBombPos.y][thisBombPos.x].bomb_type = Bomb_table[thisBombPos.y][thisBombPos.y].bomb_type;
+			Explode_table[thisBombPos.y][thisBombPos.x].time = cur_time;
+			Explode_table[thisBombPos.y][thisBombPos.x].type = 1;
 			queueBombpos.pop();
 
 			find_fire_path(Bomb_table[thisBombPos.y][thisBombPos.x], cur_time, thisBombPos.y, thisBombPos.x);
 		}
 	}
+
+	for (int i = 0; i <= table_scale_height; i++)
+		for (int j = 0; j <= table_scale_width; j++)
+		{
+			if (Explode_table[i][j].set)
+			{
+				float count_down = cur_time - Explode_table[i][j].time;
+				if (count_down <= 0.1f)
+				{
+					Fire_exploding(Explode_table[i][j], window, cur_time, -1);
+				}
+				else if (count_down > 0.1f && count_down <= 0.2f)
+				{
+					Fire_exploding(Explode_table[i][j], window, cur_time, Explode_table[i][j].type);
+				}
+				else
+				{
+					Explode_table[i][j].set = 0;
+				}
+			}
+		}
 	
-
-
 }
 
 void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
@@ -308,11 +333,11 @@ void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
 			if (tmp_x >= 0 && tmp_x < table_scale_width && tmp_y >= 0 && tmp_y < table_scale_height)
 			{
 				it = table[tmp_y][tmp_x].object;
-				if (it == 0)
+				if (it == 0 && !Explode_table[tmp_y][tmp_x].set)
 				{
 					Explode_table[tmp_y][tmp_x].time = cur_time;
 					Explode_table[tmp_y][tmp_x].set = 1;
-					Explode_table[tmp_y][tmp_x].type = 1;
+					Explode_table[tmp_y][tmp_x].type = set_fire_type(y, x, tmp_y, tmp_x, fire_range);
 					Explode_table[tmp_y][tmp_x].bomb_type = Bomb_table[y][x].bomb_type;
 					Explode_table[tmp_y][tmp_x].pos = set_fire_pos(tmp_y, tmp_x);
 				}
@@ -331,14 +356,6 @@ void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
 				break;
 			}
 		}
-	}
-	if (Explode_table[tmp_y][tmp_x].set == 0)
-	{
-		Explode_table[y][x].time = cur_time;
-		Explode_table[y][x].set = 1;
-		Explode_table[y][x].type = 1;
-		Explode_table[y][x].bomb_type = Bomb_table[y][x].bomb_type;
-		Explode_table[y][x].pos = set_fire_pos(tmp_y, tmp_x);
 	}
 		
 }
@@ -386,8 +403,8 @@ void Fire_exploding(Explode_mark thisFireExploding, sf::RenderWindow& window, fl
 	}
 
 
-	Bomb normalBomb(&explodingBombTexture, thisFireExploding.pos, sf::Vector2u(4, 1), 0.05f);
-	BombAnimation bombAnimation(&explodingBombTexture, sf::Vector2u(1, 4), 0.025f);
+	BombExploding normalBomb(&explodingBombTexture, thisFireExploding.pos, sf::Vector2u(4, 1), 0.05f);
+	BombExplodingAnim bombAnimation(&explodingBombTexture, sf::Vector2u(1, 4), 0.025f);
 	normalBomb.Update(thisFireExploding.time, cur_time, 0.025f);
 	//normalBomb.GetCollider().CheckCollision(player, 1.0f, 3, 1);
 	normalBomb.Draw(window);
@@ -443,6 +460,28 @@ void Bomb_exploding(Bomb_info thisBombExploding, sf::RenderWindow& window, float
 			//normalBomb.GetCollider().CheckCollision(player, 1.0f, 3, 1);
 		normalBomb.Draw(window);
 
+}
+
+int set_fire_type(int y1, int x1, int y2, int x2, int fire)
+{
+	if (y1 == y2 && x1 != x2)
+	{
+		if (fire != 0) return 2;
+		else
+		{
+			if (x2 < x1) return 4;
+			else return 6;
+		}
+	}
+	else
+	{
+		if (fire != 0) return 3;
+		else
+		{
+			if (y2 < y1) return 5;
+			else return 7;
+		}
+	}
 }
 
 
