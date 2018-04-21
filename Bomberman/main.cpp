@@ -71,12 +71,11 @@ Item_mark Item_mark_table[30][30];
 //-----------------------------Player information----------------------
 typedef struct {
 	float switch_time;
-	float speed;
 	float lose_time;
+	int speed;
 	int fire_range;
 	int bomb;
 	int used_bomb;
-	int bomb_limit;
 	int bomb_type;
 	int is_die;
 	sf::Texture playerTexture;
@@ -160,6 +159,7 @@ void Fire_exploding(Explode_mark thisFireExploding,
 void Bomb_exploding(Bomb_info thisBombExploding, sf::RenderWindow& window, float cur_time, int fire_type);
 void Block_exploding(Block_mark thisBlockExploding, sf::RenderWindow& window, float cur_time);
 void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x);
+void player_got_item(int type, int player_number);
 sf::Vector2f check_set_bombPosition(sf::Vector2f thisPosition, float cur_time, int own);
 sf::Vector2f set_fire_pos(int y, int x);
 //---------------------------------- -------------------------------------------------------------------
@@ -442,11 +442,13 @@ void generate_bomb(sf::RenderWindow& window,
 					{
 						Item_mark_table[i][j].set = 0;
 						Item_mark_table[i][j].burn = 0;
+						player_got_item(Item_mark_table[i][j].type, 0);
 					}
 					if (thisItem.GetCollider().CheckCollision(player2rd, 1.0f, 5, 1))
 					{
 						Item_mark_table[i][j].set = 0;
 						Item_mark_table[i][j].burn = 0;
+						player_got_item(Item_mark_table[i][j].type, 0);
 					}
 					thisItem.Draw(window);
 				}
@@ -472,6 +474,17 @@ void generate_bomb(sf::RenderWindow& window,
 		}
 	}
 	
+}
+
+void player_got_item(int type, int player_number)
+{
+	if (type == 1) PLAYER[player_number].bomb++;
+	if (type == 2) PLAYER[player_number].fire_range++;
+	if (type == 3 && PLAYER[player_number].speed < 200) PLAYER[player_number].speed+=10;
+	if (type == 4) PLAYER[player_number].bomb_type = 2;
+	if (type == 5 && PLAYER[player_number].bomb > 1) PLAYER[player_number].bomb--;
+	if (type == 6 && PLAYER[player_number].fire_range > 1) PLAYER[player_number].fire_range--;
+	if (type == 7 && PLAYER[player_number].speed > 100) PLAYER[player_number].speed-=10;
 }
 
 void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
@@ -843,11 +856,10 @@ void set_player_info()
 	for (int i = 0; i < 4; i++)
 	{
 		PLAYER[i].switch_time = 0.125f;
-		PLAYER[i].speed = 100.0f;
+		PLAYER[i].speed = 200;
 		PLAYER[i].fire_range = 1;
 		PLAYER[i].used_bomb = 0;
 		PLAYER[i].bomb = 1;
-		PLAYER[i].bomb_limit = 10;
 		PLAYER[i].bomb_type = 1;
 		PLAYER[i].is_die = 0;
 		PLAYER[i].have_des = 0;
