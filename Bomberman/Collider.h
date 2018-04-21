@@ -16,13 +16,13 @@ public:
 		if (type == 0)
 			return body.getSize() / 2.0f;
 		if (type == 1)
-			return sf::Vector2f(22.0f, 13.0f);
+			return sf::Vector2f(20.0f, 13.0f);
 		if (type == 2)
 			return sf::Vector2f(25.0f, 25.0f);
 		if (type == 3)
 			return sf::Vector2f(20.0f, 20.0f);
 		if (type == 4)
-			return sf::Vector2f(24.5f, 24.5f);
+			return sf::Vector2f(22.5f, 22.5f);
 		if (type == 5)
 			return sf::Vector2f(25.0f, 25.0f);
 		return sf::Vector2f(25.0f, 25.0f);

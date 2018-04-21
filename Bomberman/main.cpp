@@ -24,6 +24,7 @@
 #include "MAP_outside_top.h"
 #include "Collider.h"
 #include "Immortal.h"
+#include "BOT1.h"
 using namespace std;
 //------------------struct  Bomb pos---------------------------------------
 typedef struct {
@@ -181,7 +182,7 @@ int main()
 	set_sprite_map();
 
 	printf("Start Program!!\n");
-	sf::RenderWindow window(sf::VideoMode(resolution_x, resolution_y), "SFML works!", sf::Style::Close | sf::Style::Resize);
+	sf::RenderWindow window(sf::VideoMode(resolution_x, resolution_y), "SFML works!", sf::Style::Close | sf::Style::Fullscreen);
 
 	
 	PLAYER[0].playerTexture.loadFromFile("./Sprite/Bomberman/WhitePlayer.png");
@@ -231,8 +232,6 @@ int main()
 			}
 			*/
 		}
-
-		//printf("Planting : %d\n", player.planting);
 		if (PLAYER[0].is_die == 0)
 		{
 			player.Update(deltaTime, PLAYER[0].switch_time); //deltaTime , switch time
@@ -243,6 +242,7 @@ int main()
 			}
 			player.planting = 0;
 		}
+
 		if (PLAYER[1].is_die == 0)
 		{
 			player2rd.Update(deltaTime, PLAYER[1].switch_time); //deltaTime , switch time
@@ -295,6 +295,10 @@ int main()
 				LoseAnimation animation(&PLAYER[1].Burning, sf::Vector2u(1, 10), 1.5f / 10.0f);
 				player2rd_lose.Update(PLAYER[1].lose_time, global_time, 1.5f / 10.0f);
 				player2rd_lose.Draw(window);
+			}
+			else
+			{
+
 			}
 		}
 			
@@ -601,13 +605,13 @@ void Fire_exploding(Explode_mark thisFireExploding ,
 	BombExploding normalBomb(&explodingBombTexture, thisFireExploding.pos, sf::Vector2u(4, 1), 0.05f);
 	BombExplodingAnim bombAnimation(&explodingBombTexture, sf::Vector2u(1, 4), 0.025f);
 	normalBomb.Update(thisFireExploding.time, cur_time, 0.025f);
-	if (normalBomb.GetCollider().CheckCollision(player, 1.0f, 4, 1))
+	if (normalBomb.GetCollider().CheckCollision(player, 1.0f, 4, 1) && PLAYER[0].is_die == 0)
 	{
 		PLAYER[0].is_die = 1;
 		PLAYER[0].lose_time = cur_time;
 		PLAYER[0].lose_position = player_pos;
 	}
-	if (normalBomb.GetCollider().CheckCollision(player2rd, 1.0f, 4, 1))
+	if (normalBomb.GetCollider().CheckCollision(player2rd, 1.0f, 4, 1) && PLAYER[1].is_die == 0)
 	{
 		PLAYER[1].is_die = 1;
 		PLAYER[1].lose_time = cur_time;
@@ -771,8 +775,8 @@ void generate_immortal(sf::RenderWindow& window, Collider& player, Collider& pla
 	sf::Vector2f obj_pos;
 	
 	//-----------------------Outside--------------------------
-	sf::Vector2f obj_outside_top = sf::Vector2f(battle_table_x - 4*50 - 75, battle_table_y - 6*50 - 75);
-	sf::Vector2f obj_outside_left = sf::Vector2f(battle_table_x - 4*50 - 75, battle_table_y - 75);
+	sf::Vector2f obj_outside_top = sf::Vector2f((float)battle_table_x - 4*50 - 75, (float)battle_table_y - 6*50 - 75);
+	sf::Vector2f obj_outside_left = sf::Vector2f((float)battle_table_x - 4*50 - 75, (float)battle_table_y - 75);
 
 	MAP_outside_top top(&thisMAP[map].Top, sf::Vector2f(1550.0f, 300.0f), obj_outside_top);
 	MAP_outside_top left(&thisMAP[map].Left, sf::Vector2f(200.0f, 650.0f), obj_outside_left);
@@ -812,8 +816,8 @@ void generate_immortal(sf::RenderWindow& window, Collider& player, Collider& pla
 			}
 		}
 	//-----------------------Outside--------------------------
-	sf::Vector2f obj_outside_right = sf::Vector2f(battle_table_x + 21*50 + 25, battle_table_y - 75);
-	sf::Vector2f obj_outside_bottom = sf::Vector2f(battle_table_x - 4*50 - 75, battle_table_y + 11*50 + 25);
+	sf::Vector2f obj_outside_right = sf::Vector2f((float)battle_table_x + 21*50 + 25, (float)battle_table_y - 75);
+	sf::Vector2f obj_outside_bottom = sf::Vector2f((float)battle_table_x - 4*50 - 75, (float)battle_table_y + 11*50 + 25);
 
 	MAP_outside_top right(&thisMAP[map].Right, sf::Vector2f(200.0f, 650.0f), obj_outside_right);
 	MAP_outside_top bottom(&thisMAP[map].Bottom, sf::Vector2f(1550.0f, 200.0f), obj_outside_bottom);
@@ -856,7 +860,7 @@ void set_player_info()
 	for (int i = 0; i < 4; i++)
 	{
 		PLAYER[i].switch_time = 0.125f;
-		PLAYER[i].speed = 200;
+		PLAYER[i].speed = 100;
 		PLAYER[i].fire_range = 1;
 		PLAYER[i].used_bomb = 0;
 		PLAYER[i].bomb = 1;
