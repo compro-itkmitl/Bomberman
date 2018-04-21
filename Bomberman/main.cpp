@@ -18,6 +18,7 @@
 #include "LoseAnimation.h"
 #include "MAP_GROUND.h"
 #include "MAP_OBJECT.h"
+#include "MAP_outside_top.h"
 #include "Collider.h"
 #include "Immortal.h"
 using namespace std;
@@ -57,8 +58,8 @@ Block_mark Block_table[50][50];
 
 //-----------------------------Player information----------------------
 typedef struct {
-	float speed;
 	float switch_time;
+	float speed;
 	float lose_time;
 	int fire_range;
 	int bomb;
@@ -74,8 +75,11 @@ typedef struct {
 	int des_x;
 	int des_y;
 	int have_des;
+
+	
 }Player_info;
-Player_info PLAYER[5];  //P1 P2 BOT BOT BOT
+Player_info PLAYER[4] ;  //P1 P2 BOT BOT BOT
+
 void set_player_info();
 
 typedef struct {
@@ -107,6 +111,8 @@ int battle_table_x = (resolution_x / 2 - (table_scale_width / 2) * 50);
 int battle_table_y = (resolution_y / 2 - (table_scale_height / 2) * 50) + 75;
 
 void generate_map();
+void set_sprite_map();
+void set_to_item_table(int x, int y);
 
 
 typedef struct{
@@ -116,19 +122,28 @@ typedef struct{
 	sf::Texture Outside;
 	sf::Texture Object;
 	sf::Texture Boom;
+	sf::Texture Top;
+	sf::Texture Left;
+	sf::Texture Right;
+	sf::Texture Bottom;
 }Sprite_MAP;
 Sprite_MAP thisMAP[5];
 
 int check_pos_bomb_player(sf::Vector2f this_bomb, sf::Vector2f this_player);
 int set_fire_type(int y1, int x1, int y2, int x2, int fire);
-void set_sprite_map();
 void generate_background(sf::RenderWindow& window, int map);
-void generate_immortal(sf::RenderWindow& window, Collider& player, int map);
-void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f player_pos, float cur_time);
+void generate_immortal(sf::RenderWindow& window, Collider& player, Collider& player2rd, int map);
+void generate_bomb(sf::RenderWindow& window,
+	Collider& player, sf::Vector2f player_pos,
+	Collider& player2rd, sf::Vector2f player2rd_pos,
+	float cur_time);
 void set_table_to_ground(int y, int x);
 void add_bomb_to_queue(int y, int x, int type);
 void add_block_to_queue(int y, int x, int type);
-void Fire_exploding(Explode_mark thisFireExploding, Collider& player, sf::Vector2f player_pos, sf::RenderWindow& window, float cur_time, int fire_type);
+void Fire_exploding(Explode_mark thisFireExploding,
+	Collider& player, sf::Vector2f player_pos,
+	Collider& player2rd, sf::Vector2f player2rd_pos,
+	sf::RenderWindow& window, float cur_time, int fire_type);
 void Bomb_exploding(Bomb_info thisBombExploding, sf::RenderWindow& window, float cur_time, int fire_type);
 void Block_exploding(Block_mark thisBlockExploding, sf::RenderWindow& window, float cur_time);
 void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x);
@@ -145,6 +160,7 @@ sf::Vector2f set_fire_pos(int y, int x);
 //---------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------
 int Map_number = 0;
+
 
 int main()
 {
@@ -167,7 +183,7 @@ int main()
 	set_player_info();
 
 	Player player(&PLAYER[0].playerTexture, sf::Vector2u(3, 7), PLAYER[0].switch_time, PLAYER[0].speed, PLAYER[0].spawn_postion);
-	PlayerAnimation animation(&PLAYER[0].playerTexture, sf::Vector2u(3, 7), PLAYER[0].switch_time);    //0.2f is switchTime
+	PlayerAnimation animation(&PLAYER[0].playerTexture, sf::Vector2u(3, 7), PLAYER[0].switch_time);
 
 	Player2rd player2rd(&PLAYER[1].playerTexture, sf::Vector2u(3, 7), PLAYER[1].switch_time, PLAYER[1].speed, PLAYER[1].spawn_postion);
 	PlayerAnimation animation2rd(&PLAYER[1].playerTexture, sf::Vector2u(3, 7), PLAYER[1].switch_time);
@@ -210,7 +226,7 @@ int main()
 			if (player.planting && PLAYER[0].used_bomb+1 <= PLAYER[0].bomb)
 			{
 				player.planting = 0;
-				sf::Vector2f currentPosition = check_set_bombPosition(player.GetPosition(), global_time, 0);
+				sf::Vector2f currentPosition = check_set_bombPosition(player.GetPosition(),  global_time, 0);
 			}
 			player.planting = 0;
 		}
@@ -231,8 +247,11 @@ int main()
 
 		
 		generate_background(window, Map_number);
-		generate_immortal(window, player.GetCollider(), Map_number);
-		generate_bomb(window, player.GetCollider(), player.GetPosition(), global_time);
+		generate_immortal(window, player.GetCollider(), player2rd.GetCollider(), Map_number);
+		generate_bomb(window,
+			player.GetCollider(), player.GetPosition(),
+			player2rd.GetCollider(), player2rd.GetPosition(),
+			global_time);
 
 		if (PLAYER[0].is_die == 0)
 		{
@@ -282,7 +301,10 @@ int main()
 }
 
 
-void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f player_pos, float cur_time)
+void generate_bomb(sf::RenderWindow& window,
+	Collider& player, sf::Vector2f player_pos,
+	Collider& player2rd, sf::Vector2f player2rd_pos,
+	float cur_time)
 {
 	sf::Texture normalBombTexture;
 	/*
@@ -314,6 +336,10 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 					if (check_pos_bomb_player(normalBomb.GetPosition(), player_pos))
 					{
 						normalBomb.GetCollider().CheckCollision(player, 1.0f, 3, 1);
+					}
+					if (check_pos_bomb_player(normalBomb.GetPosition(), player2rd_pos))
+					{
+						normalBomb.GetCollider().CheckCollision(player2rd, 1.0f, 3, 1);
 					}
 					normalBomb.Draw(window);
 				}
@@ -363,11 +389,17 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 			{
 				if (count_down <= 0.1f)
 				{
-					Fire_exploding(Explode_table[i][j], player, player_pos, window, cur_time, -1);
+					Fire_exploding(Explode_table[i][j],
+						player, player_pos,
+						player2rd, player2rd_pos,
+						window, cur_time, -1);
 				}
 				else if (count_down > 0.1f && count_down <= 0.2f)
 				{
-					Fire_exploding(Explode_table[i][j], player, player_pos, window, cur_time, Explode_table[i][j].type);
+					Fire_exploding(Explode_table[i][j],
+						player, player_pos,
+						player2rd, player2rd_pos,
+						window, cur_time, Explode_table[i][j].type);
 					if (Explode_table[i][j].set == 2)
 						Block_exploding(Block_table[i][j], window, cur_time);
 				}
@@ -436,7 +468,10 @@ void Block_exploding(Block_mark thisBlockExploding, sf::RenderWindow& window, fl
 	normalBomb.Draw(window);
 }
 
-void Fire_exploding(Explode_mark thisFireExploding , Collider& player, sf::Vector2f player_pos, sf::RenderWindow& window, float cur_time, int fire_type)
+void Fire_exploding(Explode_mark thisFireExploding ,
+	Collider& player, sf::Vector2f player_pos,
+	Collider& player2rd, sf::Vector2f player2rd_pos,
+	sf::RenderWindow& window, float cur_time, int fire_type)
 {
 	sf::Texture explodingBombTexture;
 	if (thisFireExploding.bomb_type == 1)
@@ -487,6 +522,12 @@ void Fire_exploding(Explode_mark thisFireExploding , Collider& player, sf::Vecto
 		PLAYER[0].is_die = 1;
 		PLAYER[0].lose_time = cur_time;
 		PLAYER[0].lose_position = player_pos;
+	}
+	if (normalBomb.GetCollider().CheckCollision(player2rd, 1.0f, 4, 1))
+	{
+		PLAYER[1].is_die = 1;
+		PLAYER[1].lose_time = cur_time;
+		PLAYER[1].lose_position = player2rd_pos;
 	}
 	normalBomb.Draw(window);
 
@@ -621,6 +662,10 @@ void set_sprite_map()
 	thisMAP[0].Outside.loadFromFile("./Sprite/AllMap/Map_Default/Outside.png");
 	thisMAP[0].Object.loadFromFile("./Sprite/AllMap/Map_Default/Object.png");
 	thisMAP[0].Boom.loadFromFile("./Sprite/AllMap/Map_Default/Boom.png");
+	thisMAP[0].Top.loadFromFile("./Sprite/AllMap/Map_Default/MAP_top_Default.png");
+	thisMAP[0].Left.loadFromFile("./Sprite/AllMap/Map_Default/MAP_left_Default.png");
+	thisMAP[0].Right.loadFromFile("./Sprite/AllMap/Map_Default/MAP_right_Default.png");
+	thisMAP[0].Bottom.loadFromFile("./Sprite/AllMap/Map_Default/MAP_bottom_Default.png");
 }
 
 void generate_background(sf::RenderWindow& window, int map)
@@ -636,10 +681,22 @@ void generate_background(sf::RenderWindow& window, int map)
 		}
 }
 
-void generate_immortal(sf::RenderWindow& window, Collider& player, int map)
+void generate_immortal(sf::RenderWindow& window, Collider& player, Collider& player2rd, int map)
 {
 	sf::Vector2f obj_scale = sf::Vector2f(60.0f, 70.0f);
 	sf::Vector2f obj_pos;
+	
+	//-----------------------Outside--------------------------
+	sf::Vector2f obj_outside_top = sf::Vector2f(battle_table_x - 4*50 - 75, battle_table_y - 6*50 - 75);
+	sf::Vector2f obj_outside_left = sf::Vector2f(battle_table_x - 4*50 - 75, battle_table_y - 75);
+
+	MAP_outside_top top(&thisMAP[map].Top, sf::Vector2f(1550.0f, 300.0f), obj_outside_top);
+	MAP_outside_top left(&thisMAP[map].Left, sf::Vector2f(200.0f, 650.0f), obj_outside_left);
+
+	top.Draw(window);
+	left.Draw(window);
+	//--------------------------------------------------------
+
 	for (int i = -1; i<=table_scale_height; i++)
 		for (int j = -1; j <=table_scale_width; j++)
 		{
@@ -649,6 +706,7 @@ void generate_immortal(sf::RenderWindow& window, Collider& player, int map)
 			{
 				Immortal immortal(&thisMAP[map].Outside, obj_scale, obj_pos );
 				immortal.GetCollider().CheckCollision(player, 1.0f, 2, 1);
+				immortal.GetCollider().CheckCollision(player2rd, 1.0f, 2, 1);
 				immortal.Draw(window);
 			}
 			else 
@@ -657,16 +715,28 @@ void generate_immortal(sf::RenderWindow& window, Collider& player, int map)
 				{
 					MAP_OBJECT object(&thisMAP[map].Object, obj_scale, obj_pos );
 					object.GetCollider().CheckCollision(player, 1.0f, 2, 1);
+					object.GetCollider().CheckCollision(player2rd, 1.0f, 2, 1);
 					object.Draw(window);
 				}
 				else if (table[i][j].object == 99)
 				{
 					Immortal immortal(&thisMAP[map].immortal, obj_scale, obj_pos);
 					immortal.GetCollider().CheckCollision(player, 1.0f, 2, 1);
+					immortal.GetCollider().CheckCollision(player2rd, 1.0f, 2, 1);
 					immortal.Draw(window);
 				}
 			}
 		}
+	//-----------------------Outside--------------------------
+	sf::Vector2f obj_outside_right = sf::Vector2f(battle_table_x + 21*50 + 25, battle_table_y - 75);
+	sf::Vector2f obj_outside_bottom = sf::Vector2f(battle_table_x - 4*50 - 75, battle_table_y + 11*50 + 25);
+
+	MAP_outside_top right(&thisMAP[map].Right, sf::Vector2f(200.0f, 650.0f), obj_outside_right);
+	MAP_outside_top bottom(&thisMAP[map].Bottom, sf::Vector2f(1550.0f, 200.0f), obj_outside_bottom);
+
+	right.Draw(window);
+	bottom.Draw(window);
+	//--------------------------------------------------------
 
 	
 }
@@ -692,7 +762,7 @@ void set_player_info()
 		int have_des;
 	}Player_info;
 	*/
-	sf::Vector2f player_spawn_pos[5] = {
+	sf::Vector2f player_spawn_pos[4] = {
 		sf::Vector2f((float)battle_table_x, (float)battle_table_y),
 		sf::Vector2f((float)battle_table_x + 20 * 50, (float)battle_table_y),
 		sf::Vector2f((float)battle_table_x, (float)battle_table_y + 10 *50),
@@ -852,7 +922,12 @@ void generate_items(int blocks)
 		}
 		table[x][y].object = 2; //2 = item;
 		table[x][y].meterial = '?';
+		set_to_item_table(x, y);
 	}
+}
+
+void set_to_item_table(int x, int y)
+{
 
 }
 

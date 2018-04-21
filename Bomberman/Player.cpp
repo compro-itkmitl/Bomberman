@@ -21,6 +21,7 @@ Player::~Player()
 {
 }
 
+
 void Player::Update(float deltaTime, float switchTime)
 {
 

@@ -166,6 +166,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MAP_GROUND.cpp" />
     <ClCompile Include="MAP_OBJECT.cpp" />
+    <ClCompile Include="MAP_outside_top.cpp" />
     <ClCompile Include="Platform.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Player2rd.cpp" />
@@ -182,6 +183,7 @@
     <ClInclude Include="LoseAnimation.h" />
     <ClInclude Include="MAP_GROUND.h" />
     <ClInclude Include="MAP_OBJECT.h" />
+    <ClInclude Include="MAP_outside_top.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Player2rd.h" />

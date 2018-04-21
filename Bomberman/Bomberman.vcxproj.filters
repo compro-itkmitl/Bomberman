@@ -60,6 +60,9 @@
     <ClCompile Include="Player2rd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MAP_outside_top.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PlayerAnimation.h">
@@ -102,6 +105,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Player2rd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MAP_outside_top.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

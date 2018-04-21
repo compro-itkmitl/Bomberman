@@ -16,7 +16,7 @@ MAP_GROUND::~MAP_GROUND()
 {
 }
 
-void MAP_GROUND::Draw(sf::RenderWindow& window)
+void MAP_GROUND::Draw(RenderWindow& window)
 {
 	window.draw(body);
 }
