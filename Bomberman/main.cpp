@@ -155,11 +155,10 @@ int main()
 	sf::RenderWindow window(sf::VideoMode(resolution_x, resolution_y), "SFML works!", sf::Style::Close | sf::Style::Resize);
 
 	
-	PLAYER[0].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
-	PLAYER[1].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
-	PLAYER[2].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
-	PLAYER[3].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
-	PLAYER[3].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
+	PLAYER[0].playerTexture.loadFromFile("./Sprite/Bomberman/WhitePlayer.png");
+	PLAYER[1].playerTexture.loadFromFile("./Sprite/Bomberman/BlackPlayer.png");
+	PLAYER[2].playerTexture.loadFromFile("./Sprite/Bomberman/RedPlayer.png");
+	PLAYER[3].playerTexture.loadFromFile("./Sprite/Bomberman/BluePlayer.png");
 	PLAYER[0].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
 	PLAYER[1].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
 	PLAYER[2].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
@@ -696,12 +695,11 @@ void set_player_info()
 	sf::Vector2f player_spawn_pos[5] = {
 		sf::Vector2f((float)battle_table_x, (float)battle_table_y),
 		sf::Vector2f((float)battle_table_x + 20 * 50, (float)battle_table_y),
-		sf::Vector2f((float)battle_table_x + 20 * 50, (float)battle_table_y),
 		sf::Vector2f((float)battle_table_x, (float)battle_table_y + 10 *50),
 		sf::Vector2f((float)battle_table_x + 20 * 50, (float)battle_table_y + 10 * 50),
 	};
 
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		PLAYER[i].switch_time = 0.125f;
 		PLAYER[i].speed = 100.0f;
