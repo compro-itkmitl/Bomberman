@@ -13,6 +13,8 @@
 #include "BombAnimation.h"
 #include "BombExploding.h"
 #include "BombExplodingAnim.h"
+#include "Lose.h"
+#include "LoseAnimation.h"
 #include "MAP_GROUND.h"
 #include "MAP_OBJECT.h"
 #include "Collider.h"
@@ -56,6 +58,7 @@ Block_mark Block_table[50][50];
 typedef struct {
 	float speed;
 	float switch_time;
+	float lose_time;
 	int fire_range;
 	int bomb;
 	int used_bomb;
@@ -63,7 +66,9 @@ typedef struct {
 	int bomb_type;
 	int is_die;
 	sf::Texture playerTexture;
+	sf::Texture Burning;
 	sf::Vector2f spawn_postion;
+	sf::Vector2f lose_position;
 	//------for bot-------
 	int des_x;
 	int des_y;
@@ -118,11 +123,11 @@ int set_fire_type(int y1, int x1, int y2, int x2, int fire);
 void set_sprite_map();
 void generate_background(sf::RenderWindow& window, int map);
 void generate_immortal(sf::RenderWindow& window, Collider& player, int map);
-void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f player_pos, float cur_time, int type);
+void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f player_pos, float cur_time);
 void set_table_to_ground(int y, int x);
 void add_bomb_to_queue(int y, int x, int type);
 void add_block_to_queue(int y, int x, int type);
-void Fire_exploding(Explode_mark thisFireExploding, sf::RenderWindow& window, float cur_time, int fire_type);
+void Fire_exploding(Explode_mark thisFireExploding, Collider& player, sf::Vector2f player_pos, sf::RenderWindow& window, float cur_time, int fire_type);
 void Bomb_exploding(Bomb_info thisBombExploding, sf::RenderWindow& window, float cur_time, int fire_type);
 void Block_exploding(Block_mark thisBlockExploding, sf::RenderWindow& window, float cur_time);
 void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x);
@@ -153,6 +158,10 @@ int main()
 	PLAYER[1].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
 	PLAYER[2].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
 	PLAYER[3].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
+	PLAYER[0].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
+	PLAYER[1].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
+	PLAYER[2].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
+	PLAYER[3].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
 	set_player_info();
 
 	Player player(&PLAYER[0].playerTexture, sf::Vector2u(3, 7), PLAYER[0].switch_time, PLAYER[0].speed, PLAYER[0].spawn_postion);
@@ -190,26 +199,46 @@ int main()
 		}
 
 		//printf("Planting : %d\n", player.planting);
-		
-		player.Update(deltaTime, PLAYER[0].switch_time); //deltaTime , switch time
-		if (player.planting && PLAYER[0].used_bomb+1 <= PLAYER[0].bomb)
+		if (PLAYER[0].is_die == 0)
 		{
-			player.planting = 0;
-			sf::Vector2f currentPosition = check_set_bombPosition(player.GetPosition(), global_time, 0);
+			player.Update(deltaTime, PLAYER[0].switch_time); //deltaTime , switch time
+			if (player.planting && PLAYER[0].used_bomb+1 <= PLAYER[0].bomb)
+			{
+				player.planting = 0;
+				sf::Vector2f currentPosition = check_set_bombPosition(player.GetPosition(), global_time, 0);
 			
-			//printf("%d/%d\n", PLAYER[0].used_bomb, PLAYER[0].bomb);
-			//_sleep(200);
+				//printf("%d/%d\n", PLAYER[0].used_bomb, PLAYER[0].bomb);
+				//_sleep(200);
+			}
+			player.planting = 0;
 		}
-		player.planting = 0;
+		else
+		{
+			
+		}
+		
 		//printf("%d/%d\n", PLAYER[0].used_bomb, PLAYER[0].bomb);
 		window.clear(sf::Color::Green);
 
 		
 		generate_background(window, Map_number);
 		generate_immortal(window, player.GetCollider(), Map_number);
-		generate_bomb(window, player.GetCollider(), player.GetPosition(), global_time, 1);
+		generate_bomb(window, player.GetCollider(), player.GetPosition(), global_time);
 
-		player.Draw(window);
+		if (PLAYER[0].is_die == 0)
+			player.Draw(window);
+		else
+		{
+			if (global_time - PLAYER[0].lose_time <= 1.50f)
+			{
+				printf("%f %f\n", global_time, PLAYER[0].lose_time);
+				Lose player_lose(&PLAYER[0].Burning, PLAYER[0].lose_position, sf::Vector2u(10, 1), 1.5f / 10.0f);
+				LoseAnimation animation(&PLAYER[0].Burning, sf::Vector2u(1, 10), 1.5f / 10.0f);
+				player_lose.Update(PLAYER[0].lose_time, global_time, 1.5f / 10.0f);
+				player_lose.Draw(window);
+			}
+		}
+			
 
 		window.display();
 
@@ -226,14 +255,15 @@ int main()
 }
 
 
-void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f player_pos, float cur_time, int type)
+void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f player_pos, float cur_time)
 {
 	sf::Texture normalBombTexture;
+	/*
 	if(type == 1)
 	normalBombTexture.loadFromFile("./Sprite/Bomb/normalBomb.png");
 	else
 	normalBombTexture.loadFromFile("./Sprite/Bomb/pierceBomb.png");
-
+	*/
 
 	for (int i = 0; i <= table_scale_height; i++)
 		for (int j = 0; j <= table_scale_width; j++)
@@ -243,6 +273,14 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 			{
 				if (cur_time - Bomb_table[i][j].plant_time <= 4.0f)
 				{
+					if(Bomb_table[i][j].bomb_type == 1)
+					{
+						normalBombTexture.loadFromFile("./Sprite/Bomb/normalBomb.png");
+					}
+					else
+					{
+						normalBombTexture.loadFromFile("./Sprite/Bomb/pierceBomb.png");
+					}
 					Bomb normalBomb(&normalBombTexture, Bomb_table[i][j].position, sf::Vector2u(4, 1), 0.2f);
 					BombAnimation bombAnimation(&normalBombTexture, sf::Vector2u(1, 4), 0.2f);
 					normalBomb.Update(Bomb_table[i][j].plant_time, cur_time, 0.2f);
@@ -298,14 +336,14 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 			{
 				if (count_down <= 0.1f)
 				{
-					Fire_exploding(Explode_table[i][j], window, cur_time, -1);
+					Fire_exploding(Explode_table[i][j], player, player_pos, window, cur_time, -1);
 				}
 				else if (count_down > 0.1f && count_down <= 0.2f)
 				{
-					Fire_exploding(Explode_table[i][j], window, cur_time, Explode_table[i][j].type);
+					Fire_exploding(Explode_table[i][j], player, player_pos, window, cur_time, Explode_table[i][j].type);
 					if (Explode_table[i][j].set == 2)
 						Block_exploding(Block_table[i][j], window, cur_time);
-					printf("%d ", Explode_table[i][j].type);
+					//printf("%d ", Explode_table[i][j].type);
 				}
 				else
 				{
@@ -372,7 +410,7 @@ void Block_exploding(Block_mark thisBlockExploding, sf::RenderWindow& window, fl
 	normalBomb.Draw(window);
 }
 
-void Fire_exploding(Explode_mark thisFireExploding, sf::RenderWindow& window, float cur_time, int fire_type)
+void Fire_exploding(Explode_mark thisFireExploding , Collider& player, sf::Vector2f player_pos, sf::RenderWindow& window, float cur_time, int fire_type)
 {
 	sf::Texture explodingBombTexture;
 	if (thisFireExploding.bomb_type == 1)
@@ -417,8 +455,13 @@ void Fire_exploding(Explode_mark thisFireExploding, sf::RenderWindow& window, fl
 
 	BombExploding normalBomb(&explodingBombTexture, thisFireExploding.pos, sf::Vector2u(4, 1), 0.05f);
 	BombExplodingAnim bombAnimation(&explodingBombTexture, sf::Vector2u(1, 4), 0.025f);
-	normalBomb.Update(thisFireExploding.time, cur_time,0.025);
-	//normalBomb.GetCollider().CheckCollision(player, 1.0f, 3, 1);
+	normalBomb.Update(thisFireExploding.time, cur_time, 0.025f);
+	if (normalBomb.GetCollider().CheckCollision(player, 1.0f, 4, 1))
+	{
+		PLAYER[0].is_die = 1;
+		PLAYER[0].lose_time = cur_time;
+		PLAYER[0].lose_position = player_pos;
+	}
 	normalBomb.Draw(window);
 
 }
@@ -635,7 +678,7 @@ void set_player_info()
 	{
 		PLAYER[i].switch_time = 0.125f;
 		PLAYER[i].speed = 100.0f;
-		PLAYER[i].fire_range = 1;
+		PLAYER[i].fire_range = 2;
 		PLAYER[i].used_bomb = 0;
 		PLAYER[i].bomb = 1;
 		PLAYER[i].bomb_limit = 10;

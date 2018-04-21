@@ -24,10 +24,11 @@ bool Collider::CheckCollision(Collider& other, float push, int mytype, int other
 
 	float intersectX = abs(deltaX) - (otherHalfSize.x + thisHalfSize.x);
 	float intersectY = abs(deltaY) - (otherHalfSize.y + thisHalfSize.y);
-
+	
 	if (intersectX < 0.0f && intersectY < 0.0f)
 	{
-		
+		if (mytype == 4)
+			return true;
 		push = std::min(std::max(push, 0.0f), 1.0f);
 		
 		if (intersectX > intersectY)

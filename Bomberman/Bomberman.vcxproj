@@ -161,6 +161,8 @@
     <ClCompile Include="BombExplodingAnim.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="Immortal.cpp" />
+    <ClCompile Include="Lose.cpp" />
+    <ClCompile Include="LoseAnimation.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MAP_GROUND.cpp" />
     <ClCompile Include="MAP_OBJECT.cpp" />
@@ -175,6 +177,8 @@
     <ClInclude Include="BombExplodingAnim.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Immortal.h" />
+    <ClInclude Include="Lose.h" />
+    <ClInclude Include="LoseAnimation.h" />
     <ClInclude Include="MAP_GROUND.h" />
     <ClInclude Include="MAP_OBJECT.h" />
     <ClInclude Include="Platform.h" />
