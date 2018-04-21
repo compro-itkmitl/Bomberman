@@ -1,8 +1,8 @@
-#include "BombAnimation.h"
+#include "Destroy_item_Anim.h"
 #include <SFML\Graphics.hpp>
 
 
-BombAnimation::BombAnimation(sf::Texture* texture, sf::Vector2u imageCount, float switchTime)
+Destroy_item_Anim::Destroy_item_Anim(sf::Texture* texture, sf::Vector2u imageCount, float switchTime)
 {
 	this->imageCount = imageCount;
 	this->switchTime = switchTime;
@@ -15,11 +15,11 @@ BombAnimation::BombAnimation(sf::Texture* texture, sf::Vector2u imageCount, floa
 }
 
 
-BombAnimation::~BombAnimation()
+Destroy_item_Anim::~Destroy_item_Anim()
 {
 }
 
-void BombAnimation::Update(int row, float deltaTime, float start_time)
+void Destroy_item_Anim::Update(int row, float deltaTime, float start_time)
 {
 	currentImage.y = row;
 	currentImage.x = ((int)((deltaTime - start_time) / switchTime) % imageCount.x);

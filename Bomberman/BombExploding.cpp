@@ -10,7 +10,7 @@ BombExploding::BombExploding(sf::Texture* texture, sf::Vector2f bomb_pos, sf::Ve
 
 	body.setSize(sf::Vector2f(52.0f, 52.0f));
 	//body.setOrigin(body.getSize() / 2.0f);
-	body.setOrigin(sf::Vector2f(25.0f, 25.0f));
+	body.setOrigin(sf::Vector2f(25.50f, 25.50f));
 	body.setPosition(bomb_pos);
 	body.setTexture(texture);
 

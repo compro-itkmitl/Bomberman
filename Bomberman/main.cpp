@@ -14,10 +14,13 @@
 #include "BombAnimation.h"
 #include "BombExploding.h"
 #include "BombExplodingAnim.h"
+#include "Destroy_item.h"
+#include "Destroy_item_Anim.h"
 #include "Lose.h"
 #include "LoseAnimation.h"
 #include "MAP_GROUND.h"
 #include "MAP_OBJECT.h"
+#include "MAP_item.h"
 #include "MAP_outside_top.h"
 #include "Collider.h"
 #include "Immortal.h"
@@ -47,14 +50,23 @@ typedef struct {
 	float time;
 	sf::Vector2f pos;
 }Explode_mark;
-Explode_mark Explode_table[50][50];
+Explode_mark Explode_table[30][30];
 
 typedef struct {
 	int type, set;
 	float time;
 	sf::Vector2f pos;
 }Block_mark;
-Block_mark Block_table[50][50];
+Block_mark Block_table[30][30];
+
+
+typedef struct {
+	int type;
+	int set;
+	int burn;
+	float time;
+}Item_mark;
+Item_mark Item_mark_table[30][30];
 
 //-----------------------------Player information----------------------
 typedef struct {
@@ -92,7 +104,7 @@ typedef struct {
 	float exploding_time;
 	sf::Vector2f position;
 }Bomb_info;
-Bomb_info Bomb_table[50][50];
+Bomb_info Bomb_table[30][30];
 
 
 //----------------------------------- Variables for Map-------------------------------
@@ -100,7 +112,8 @@ typedef struct {
 	char object;
 	char meterial;
 }Table;
-Table table[50][50];
+Table table[30][30];
+int item_table[30][30];
 int table_scale_height = 11;
 int table_scale_width = 21;
 
@@ -112,7 +125,7 @@ int battle_table_y = (resolution_y / 2 - (table_scale_height / 2) * 50) + 75;
 
 void generate_map();
 void set_sprite_map();
-void set_to_item_table(int x, int y);
+int set_to_item_table(int x, int y);
 
 
 typedef struct{
@@ -307,6 +320,7 @@ void generate_bomb(sf::RenderWindow& window,
 	float cur_time)
 {
 	sf::Texture normalBombTexture;
+	sf::Texture itemTexture;
 	/*
 	if(type == 1)
 	normalBombTexture.loadFromFile("./Sprite/Bomb/normalBomb.png");
@@ -410,6 +424,51 @@ void generate_bomb(sf::RenderWindow& window,
 				}
 			}
 			
+			if (Item_mark_table[i][j].set == 1)
+			{
+				if (Item_mark_table[i][j].burn == 0)
+				{
+					int item_type = Item_mark_table[i][j].type;
+					if (item_type == 1) itemTexture.loadFromFile("./Sprite/Item/Bomb-Up.png");
+					if (item_type == 2) itemTexture.loadFromFile("./Sprite/Item/Fire-Up.png");
+					if (item_type == 3) itemTexture.loadFromFile("./Sprite/Item/Speed-Up.png");
+					if (item_type == 4) itemTexture.loadFromFile("./Sprite/Item/Pierce-Bomb.png");
+					if (item_type == 5) itemTexture.loadFromFile("./Sprite/Item/Bomb-Down.png");
+					if (item_type == 6) itemTexture.loadFromFile("./Sprite/Item/Fire-Down.png");
+					if (item_type == 7) itemTexture.loadFromFile("./Sprite/Item/Speed-Down.png");
+
+					MAP_item thisItem(&itemTexture, sf::Vector2f(40.0f, 60.0f), set_fire_pos(i, j));
+					if (thisItem.GetCollider().CheckCollision(player, 1.0f, 5, 1))
+					{
+						Item_mark_table[i][j].set = 0;
+						Item_mark_table[i][j].burn = 0;
+					}
+					if (thisItem.GetCollider().CheckCollision(player2rd, 1.0f, 5, 1))
+					{
+						Item_mark_table[i][j].set = 0;
+						Item_mark_table[i][j].burn = 0;
+					}
+					thisItem.Draw(window);
+				}
+				else
+				{
+					itemTexture.loadFromFile("./Sprite/Item/Burn.png");
+					if (cur_time - Item_mark_table[i][j].time <= 0.3f)
+					{
+						Destroy_item thisItem(&itemTexture, set_fire_pos(i, j), sf::Vector2u(4, 1), 0.3f / 4.0f);
+						Destroy_item_Anim animationItem(&itemTexture, sf::Vector2u(4, 1), 0.3f / 4.0f);
+						thisItem.Update(Item_mark_table[i][j].time, cur_time, 0.3f / 4.0f);
+						thisItem.Draw(window);
+					}
+					else
+					{
+						Item_mark_table[i][j].set = 0;
+						Item_mark_table[i][j].burn = 0;
+						Item_mark_table[i][j].time = 0;
+						set_table_to_ground(i, j);
+					}
+				}
+			}
 		}
 	}
 	
@@ -431,6 +490,12 @@ void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
 			tmp_x += fire_dir[i][0];
 			tmp_y += fire_dir[i][1];
 			if (tmp_x >= 0 && tmp_x < table_scale_width && tmp_y >= 0 && tmp_y < table_scale_height){
+				if (Item_mark_table[tmp_y][tmp_x].set == 1)
+				{
+					Item_mark_table[tmp_y][tmp_x].time = cur_time;
+					Item_mark_table[tmp_y][tmp_x].burn = 1;
+				}
+
 				it = table[tmp_y][tmp_x].object;
 				if ((it == 0 || it == 1 || it == 2) && !Explode_table[tmp_y][tmp_x].set){
 					Explode_table[tmp_y][tmp_x].time = cur_time;
@@ -440,6 +505,12 @@ void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
 					Explode_table[tmp_y][tmp_x].pos = set_fire_pos(tmp_y, tmp_x);
 
 					if (it == 1 || it == 2){
+						if (it == 2)
+						{
+							Item_mark_table[tmp_y][tmp_x].set = 1;
+							Item_mark_table[tmp_y][tmp_x].burn = 0;
+						}
+						
 						add_block_to_queue(tmp_y, tmp_x, it);
 						set_table_to_ground(tmp_y, tmp_x);
 						if (Explode_table[y][x].bomb_type == 1)	break;
@@ -773,7 +844,7 @@ void set_player_info()
 	{
 		PLAYER[i].switch_time = 0.125f;
 		PLAYER[i].speed = 100.0f;
-		PLAYER[i].fire_range = 2;
+		PLAYER[i].fire_range = 1;
 		PLAYER[i].used_bomb = 0;
 		PLAYER[i].bomb = 1;
 		PLAYER[i].bomb_limit = 10;
@@ -850,7 +921,15 @@ void set_table_to_default()
 
 	for (i = 0; i < table_scale_height; i++)
 		for (j = 0; j < table_scale_width; j++)
+		{
 			table[i][j].object = 0;
+			Bomb_table[i][j].planted = 0;
+			Block_table[i][j].set = 0;
+			Explode_table[i][j].set = 0;
+			item_table[i][j] = 0;
+			Item_mark_table[i][j].set = 0;
+			Item_mark_table[i][j].burn = 0;
+		}
 
 	for (i = 0; i<table_scale_height; i++)
 	{
@@ -922,12 +1001,25 @@ void generate_items(int blocks)
 		}
 		table[x][y].object = 2; //2 = item;
 		table[x][y].meterial = '?';
-		set_to_item_table(x, y);
+		item_table[x][y] = set_to_item_table(x, y);
+		Item_mark_table[x][y].type = item_table[x][y];
 	}
 }
 
-void set_to_item_table(int x, int y)
+int set_to_item_table(int x, int y)
 {
+	int random_type, random_item;
+	random_type = rand() % 100;
+	if (random_type < 80)  // chance 80% to get positive
+	{
+		random_item = rand() % 4; // Fire-UP  Bomb-UP  Speed-UP  PierceBomb
+		return (random_item + 1);
+	}
+	else   //20% for bad things
+	{
+		random_item = rand() % 3;  // Speed-DOWN  Fire-DOWN  Bomb_DOWN
+		return (4 + random_item + 1);
+	}
 
 }
 
@@ -944,3 +1036,4 @@ int is_conner(int x, int y)
 	return 1;
 }
 //----------------------------- End Generate map ---------------------------------------
+
