@@ -1,14 +1,15 @@
-#include "Player.h"
+#include "Player2rd.h"
 #include "Collider.h"
 #include <SFML\Graphics.hpp>
 
-Player::Player(sf::Texture* texture, sf::Vector2u imageCount, float switchTime, float speed, sf::Vector2f pos) :
+
+Player2rd::Player2rd(sf::Texture* texture, sf::Vector2u imageCount, float switchTime, float speed, sf::Vector2f pos) :
 	animation(texture, imageCount, switchTime)
 {
 	this->speed = speed;
 	row = 0;
 	face = 2;
-	
+
 	body.setSize(sf::Vector2f(50.0f, 75.0f));
 	body.setOrigin(25.0f, 57.0f);
 	body.setPosition(pos);
@@ -16,21 +17,21 @@ Player::Player(sf::Texture* texture, sf::Vector2u imageCount, float switchTime, 
 	body.setTexture(texture);
 }
 
-
-Player::~Player()
+Player2rd::~Player2rd()
 {
 }
 
-void Player::Update(float deltaTime, float switchTime)
+
+void Player2rd::Update(float deltaTime, float switchTime)
 {
 
 	sf::Vector2f movement(0.0f, 0.0f);
 	switchTime *= 9.5f;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))	movement.x -= speed * deltaTime * switchTime;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))	movement.x += speed * deltaTime * switchTime;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))	movement.y -= speed * deltaTime * switchTime;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))	movement.y += speed * deltaTime * switchTime;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))	movement.x -= speed * deltaTime * switchTime;
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))	movement.x += speed * deltaTime * switchTime;
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))	movement.y -= speed * deltaTime * switchTime;
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))	movement.y += speed * deltaTime * switchTime;
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::RControl))
 	{
 		planting = 1;
 	}
@@ -54,14 +55,14 @@ void Player::Update(float deltaTime, float switchTime)
 			face = row = 3;
 		}
 	}
+
 	animation.Update(row, deltaTime, face);
 	body.setTextureRect(animation.uvRect);
 	body.move(movement);
 
-
 }
 
-void Player::Draw(sf::RenderWindow& window)
+void Player2rd::Draw(sf::RenderWindow& window)
 {
 	window.draw(body);
 }

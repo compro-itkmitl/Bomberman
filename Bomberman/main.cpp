@@ -8,6 +8,7 @@
 #include <queue>
 #include "PlayerAnimation.h"
 #include "Player.h"
+#include "Player2rd.h"
 #include "Platform.h"
 #include "Bomb.h"
 #include "BombAnimation.h"
@@ -158,15 +159,19 @@ int main()
 	PLAYER[1].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
 	PLAYER[2].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
 	PLAYER[3].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
+	PLAYER[3].playerTexture.loadFromFile("./Sprite/Bomberman/motion/WhitePlayer.png");
 	PLAYER[0].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
 	PLAYER[1].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
 	PLAYER[2].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
+	PLAYER[3].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
 	PLAYER[3].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
 	set_player_info();
 
 	Player player(&PLAYER[0].playerTexture, sf::Vector2u(3, 7), PLAYER[0].switch_time, PLAYER[0].speed, PLAYER[0].spawn_postion);
 	PlayerAnimation animation(&PLAYER[0].playerTexture, sf::Vector2u(3, 7), PLAYER[0].switch_time);    //0.2f is switchTime
 
+	Player2rd player2rd(&PLAYER[1].playerTexture, sf::Vector2u(3, 7), PLAYER[1].switch_time, PLAYER[1].speed, PLAYER[1].spawn_postion);
+	PlayerAnimation animation2rd(&PLAYER[1].playerTexture, sf::Vector2u(3, 7), PLAYER[1].switch_time);
 	
 	float global_time = 0;
 	float deltaTime = 0.0f;
@@ -174,6 +179,7 @@ int main()
 
 	generate_map();
 	player.planting = 0;
+	player2rd.planting = 0;
 	while (window.isOpen())
 	{
 		deltaTime = clock.restart().asSeconds();
@@ -206,16 +212,20 @@ int main()
 			{
 				player.planting = 0;
 				sf::Vector2f currentPosition = check_set_bombPosition(player.GetPosition(), global_time, 0);
-			
-				//printf("%d/%d\n", PLAYER[0].used_bomb, PLAYER[0].bomb);
-				//_sleep(200);
 			}
 			player.planting = 0;
 		}
-		else
+		if (PLAYER[1].is_die == 0)
 		{
-			
+			player2rd.Update(deltaTime, PLAYER[1].switch_time); //deltaTime , switch time
+			if (player2rd.planting && PLAYER[1].used_bomb + 1 <= PLAYER[1].bomb)
+			{
+				player2rd.planting = 0;
+				sf::Vector2f currentPosition = check_set_bombPosition(player2rd.GetPosition(), global_time, 1);
+			}
+			player2rd.planting = 0;
 		}
+
 		
 		//printf("%d/%d\n", PLAYER[0].used_bomb, PLAYER[0].bomb);
 		window.clear(sf::Color::Green);
@@ -226,7 +236,9 @@ int main()
 		generate_bomb(window, player.GetCollider(), player.GetPosition(), global_time);
 
 		if (PLAYER[0].is_die == 0)
+		{
 			player.Draw(window);
+		}
 		else
 		{
 			if (global_time - PLAYER[0].lose_time <= 1.50f)
@@ -236,6 +248,22 @@ int main()
 				LoseAnimation animation(&PLAYER[0].Burning, sf::Vector2u(1, 10), 1.5f / 10.0f);
 				player_lose.Update(PLAYER[0].lose_time, global_time, 1.5f / 10.0f);
 				player_lose.Draw(window);
+			}
+		}
+
+		if (PLAYER[1].is_die == 0)
+		{
+			player2rd.Draw(window);
+		}
+		else
+		{
+			if (global_time - PLAYER[1].lose_time <= 1.50f)
+			{
+				printf("%f %f\n", global_time, PLAYER[1].lose_time);
+				Lose player2rd_lose(&PLAYER[1].Burning, PLAYER[1].lose_position, sf::Vector2u(10, 1), 1.5f / 10.0f);
+				LoseAnimation animation(&PLAYER[1].Burning, sf::Vector2u(1, 10), 1.5f / 10.0f);
+				player2rd_lose.Update(PLAYER[1].lose_time, global_time, 1.5f / 10.0f);
+				player2rd_lose.Draw(window);
 			}
 		}
 			
@@ -265,8 +293,8 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 	normalBombTexture.loadFromFile("./Sprite/Bomb/pierceBomb.png");
 	*/
 
-	for (int i = 0; i <= table_scale_height; i++)
-		for (int j = 0; j <= table_scale_width; j++)
+	for (int i = 0; i < table_scale_height; i++)
+		for (int j = 0; j < table_scale_width; j++)
 		{
 
 			if (table[i][j].object == 4)
@@ -328,8 +356,8 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 		Block_table[thisBlockPos.y][thisBombPos.x].pos = set_fire_pos(thisBlockPos.y, thisBlockPos.x);
 	}
 	
-	for (int i = 0; i <= table_scale_height; i++) {
-		for (int j = 0; j <= table_scale_width; j++)
+	for (int i = 0; i < table_scale_height; i++) {
+		for (int j = 0; j < table_scale_width; j++)
 		{
 			float count_down = cur_time - Explode_table[i][j].time;
 			if (Explode_table[i][j].set)
@@ -343,7 +371,6 @@ void generate_bomb(sf::RenderWindow& window, Collider& player, sf::Vector2f play
 					Fire_exploding(Explode_table[i][j], player, player_pos, window, cur_time, Explode_table[i][j].type);
 					if (Explode_table[i][j].set == 2)
 						Block_exploding(Block_table[i][j], window, cur_time);
-					//printf("%d ", Explode_table[i][j].type);
 				}
 				else
 				{
@@ -372,7 +399,7 @@ void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
 		{
 			tmp_x += fire_dir[i][0];
 			tmp_y += fire_dir[i][1];
-			if (tmp_x >= 0 && tmp_x <= table_scale_width && tmp_y >= 0 && tmp_y <= table_scale_height){
+			if (tmp_x >= 0 && tmp_x < table_scale_width && tmp_y >= 0 && tmp_y < table_scale_height){
 				it = table[tmp_y][tmp_x].object;
 				if ((it == 0 || it == 1 || it == 2) && !Explode_table[tmp_y][tmp_x].set){
 					Explode_table[tmp_y][tmp_x].time = cur_time;
@@ -814,14 +841,14 @@ void generate_blocks(int num_blocks)
 void generate_items(int blocks)
 {
 	int x, y, item;
-	item = blocks * 33 / 100;
+	item = blocks * 40 / 100;
 	printf("Items : %d\n", item);
 	while (item--)
 	{
 		while (1)
 		{
-			x = (rand() % 15);
-			y = (rand() % 15);
+			y = (rand() % table_scale_width);
+			x = (rand() % table_scale_height);
 			if (table[x][y].object == 1)
 				break;
 		}
