@@ -160,6 +160,8 @@
     <ClCompile Include="BombExploding.cpp" />
     <ClCompile Include="BombExplodingAnim.cpp" />
     <ClCompile Include="BOT1.cpp" />
+    <ClCompile Include="BOT2.cpp" />
+    <ClCompile Include="BOT3.cpp" />
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="Destroy_item.cpp" />
     <ClCompile Include="Destroy_item_Anim.cpp" />
@@ -182,6 +184,8 @@
     <ClInclude Include="BombExploding.h" />
     <ClInclude Include="BombExplodingAnim.h" />
     <ClInclude Include="BOT1.h" />
+    <ClInclude Include="BOT2.h" />
+    <ClInclude Include="BOT3.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="Destroy_item.h" />
     <ClInclude Include="Destroy_item_Anim.h" />
