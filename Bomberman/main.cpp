@@ -627,21 +627,25 @@ void bot3_find_path(sf::Vector2f thisPosition)
 int main()
 {
 	printf("Start Program!!\n");
-	sf::RenderWindow window(sf::VideoMode(resolution_x, resolution_y), "Bomberman", sf::Style::Close | sf::Style::Resize);
-
+	sf::RenderWindow window(sf::VideoMode(resolution_x, resolution_y), "Bomberman", sf::Style::Close | sf::Style::Fullscreen);
+	int winner;
+	float winner_time = 0.0f;
+	int first_time = 1;
+	int is_pause = 0;
+	int win = 0;
+	float win_time = 0.0f;
 	int select_mode = 1;
-	int screen = 5;
-	float global_time = 0, start_screen;
+	int screen = 1;
+	float global_time = 0, start_screen = 0;
 	float deltaTime = 0.0f;
 	sf::Clock clock;
-
 	
 
 	PLAYER[0].playerTexture.loadFromFile("./Sprite/Bomberman/WhitePlayer.png");
 	PLAYER[1].playerTexture.loadFromFile("./Sprite/Bomberman/BlackPlayer.png");
-	PLAYER[2].playerTexture.loadFromFile("./Sprite/Bomberman/RedPlayer.png");
-	PLAYER[3].playerTexture.loadFromFile("./Sprite/Bomberman/BluePlayer.png");
-	PLAYER[4].playerTexture.loadFromFile("./Sprite/Bomberman/GreenPlayer.png");
+	PLAYER[2].playerTexture.loadFromFile("./Sprite/Bomberman/BlackPlayer.png");
+	PLAYER[3].playerTexture.loadFromFile("./Sprite/Bomberman/RedPlayer.png");
+	PLAYER[4].playerTexture.loadFromFile("./Sprite/Bomberman/BluePlayer.png");
 	PLAYER[0].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
 	PLAYER[1].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
 	PLAYER[2].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
@@ -657,7 +661,6 @@ int main()
 
 	Player2rd player2rd(&PLAYER[1].playerTexture, sf::Vector2u(3, 7), PLAYER[1].switch_time, (float)PLAYER[1].speed, PLAYER[1].spawn_postion);
 	PlayerAnimation animation2rd(&PLAYER[1].playerTexture, sf::Vector2u(3, 7), PLAYER[1].switch_time);
-	PLAYER[1].is_die = 1;
 
 	BOT1 bot_no1(&PLAYER[2].playerTexture, sf::Vector2u(3, 7), PLAYER[2].switch_time, (float)PLAYER[2].speed, PLAYER[2].spawn_postion);
 	PlayerAnimation animationbot_no1(&PLAYER[2].playerTexture, sf::Vector2u(3, 7), PLAYER[2].switch_time);
@@ -698,9 +701,28 @@ int main()
 			
 		window.clear(sf::Color::Green);
 
+
+		if (screen == 0)
+		{
+			if (first_time == 1)
+			{
+				first_time = 0;
+				set_sprite_map();
+				generate_map();
+				set_player_info();
+			}
+			sf::Texture Black_bg;
+			Black_bg.loadFromFile("./Sprite/Menu/Black.png");
+
+			MAP_outside_top black(&Black_bg, sf::Vector2f(1280, 960), sf::Vector2f(0, 0));
+			black.Draw(window);
+
+			start_screen += deltaTime;
+			if (start_screen > 3.0f) screen = 1;
+		}
+
 		if (screen == 1)
 		{
-
 			sf::Texture Background_pic;
 			sf::Texture Logo_pic;
 			sf::Texture text1_pic;
@@ -753,6 +775,10 @@ int main()
 			{
 				text3_size = sf::Vector2f(200 + 10, 50 + 10);
 				text3_pos = sf::Vector2f((float)(1280 - 200) / 2 - 5, (float)700 - 5);
+
+				if (event.type == sf::Event::MouseButtonPressed)
+					if (event.mouseButton.button == sf::Mouse::Left)
+						window.close();
 			}
 			else
 			{
@@ -783,7 +809,7 @@ int main()
 
 			MAP_outside_top black(&Black_bg, sf::Vector2f(1280, 960), sf::Vector2f(0, 0));
 			black.Draw(window);
-			
+		
 			
 			start_screen += deltaTime;
 			if (start_screen > 3.0f) screen = 3;
@@ -863,23 +889,24 @@ int main()
 			MAP_outside_top black(&Black_bg, sf::Vector2f(1280, 960), sf::Vector2f(0, 0));
 			black.Draw(window);
 
-
+			PLAYER[select_mode].is_die = 1;
+			win = 0;
+			win_time = 0.0f;
+			is_pause = 0;
 			start_screen += deltaTime;
 			if (start_screen > 3.0f) screen = 5;
 		}
 
 		if (screen == 5)
-		{	
-			
-			
+		{
 
 			if (PLAYER[0].is_die == 0)
 			{
 				player.Update(deltaTime, PLAYER[0].switch_time, PLAYER[0].speed); //deltaTime , switch time
-				if (player.planting && PLAYER[0].used_bomb+1 <= PLAYER[0].bomb)
+				if (player.planting && PLAYER[0].used_bomb + 1 <= PLAYER[0].bomb)
 				{
 					player.planting = 0;
-					check_set_bombPosition(player.GetPosition(),  global_time, 0);
+					check_set_bombPosition(player.GetPosition(), global_time, 0);
 				}
 				player.planting = 0;
 			}
@@ -900,112 +927,110 @@ int main()
 			sf::Thread bot3(&bot3_BFS, 2);
 
 
-				if (PLAYER[2].is_die == 0)
-				{
+			if (PLAYER[2].is_die == 0)
+			{
 
-					if (PLAYER[2].have_des == 0 && stackpath[0].size() == 0)
-					{
-						bot1_find_path(bot_no1.GetPosition());
-					}
-					//printf("%d %d\n", PLAYER[2].des_y, PLAYER[2].des_x);
+				if (PLAYER[2].have_des == 0 && stackpath[0].size() == 0)
+				{
+					bot1_find_path(bot_no1.GetPosition());
+				}
+				//printf("%d %d\n", PLAYER[2].des_y, PLAYER[2].des_x);
+				if (!stackpath[0].empty())
+				{
+					if (is_same_pos(bot_no1.GetPosition(), sf::Vector2f((float)battle_table_x + 50 * stackpath[0].top().x, (float)battle_table_y + 50 * stackpath[0].top().y)))
+						stackpath[0].pop();
 					if (!stackpath[0].empty())
-					{
-						if (is_same_pos(bot_no1.GetPosition(), sf::Vector2f((float)battle_table_x + 50 * stackpath[0].top().x, (float)battle_table_y + 50 * stackpath[0].top().y)))
-							stackpath[0].pop();
-						if (!stackpath[0].empty())
 						bot_no1.Update(deltaTime, PLAYER[2].switch_time, PLAYER[2].speed, bot_no1.GetPosition(), sf::Vector2f((float)battle_table_x + 50 * stackpath[0].top().x, (float)battle_table_y + 50 * stackpath[0].top().y));
 
-					}
-					else
-						PLAYER[2].have_des = 0;
+				}
+				else
+					PLAYER[2].have_des = 0;
 
-					if (bot_no1.GetPosition() == sf::Vector2f((float)PLAYER[2].des_x * 50 + battle_table_x, (float)PLAYER[2].des_y * 50 + battle_table_y) || stackpath[0].empty())
-					{
-						bot_no1.planting = 1;
-						PLAYER[2].have_des = 0;
-					}
-					if (bot_no1.planting && PLAYER[2].used_bomb + 1 <= PLAYER[2].bomb)
-					{
-						bot_no1.planting = 0;
-						check_set_bombPosition(bot_no1.GetPosition(), global_time, 2);
-					
-					}
+				if (bot_no1.GetPosition() == sf::Vector2f((float)PLAYER[2].des_x * 50 + battle_table_x, (float)PLAYER[2].des_y * 50 + battle_table_y) || stackpath[0].empty())
+				{
+					bot_no1.planting = 1;
+					PLAYER[2].have_des = 0;
+				}
+				if (bot_no1.planting && PLAYER[2].used_bomb + 1 <= PLAYER[2].bomb)
+				{
 					bot_no1.planting = 0;
-					bot1.launch();
+					check_set_bombPosition(bot_no1.GetPosition(), global_time, 2);
 
 				}
-				if (PLAYER[3].is_die == 0)
-				{
+				bot_no1.planting = 0;
+				bot1.launch();
 
-					if (PLAYER[3].have_des == 0 && stackpath[1].size() == 0)
-					{
-						bot2_find_path(bot_no2.GetPosition());
-					}
-					//printf("%d %d\n", PLAYER[2].des_y, PLAYER[2].des_x);
+			}
+			if (PLAYER[3].is_die == 0)
+			{
+
+				if (PLAYER[3].have_des == 0 && stackpath[1].size() == 0)
+				{
+					bot2_find_path(bot_no2.GetPosition());
+				}
+				//printf("%d %d\n", PLAYER[2].des_y, PLAYER[2].des_x);
+				if (!stackpath[1].empty())
+				{
+					if (is_same_pos(bot_no2.GetPosition(), sf::Vector2f((float)battle_table_x + 50 * stackpath[1].top().x, (float)battle_table_y + 50 * stackpath[1].top().y)))
+						stackpath[1].pop();
 					if (!stackpath[1].empty())
-					{
-						if (is_same_pos(bot_no2.GetPosition(), sf::Vector2f((float)battle_table_x + 50 * stackpath[1].top().x, (float)battle_table_y + 50 * stackpath[1].top().y)))
-							stackpath[1].pop();
-						if (!stackpath[1].empty())
-							bot_no2.Update(deltaTime, PLAYER[3].switch_time, PLAYER[3].speed, bot_no2.GetPosition(), sf::Vector2f((float)battle_table_x + 50 * stackpath[1].top().x, (float)battle_table_y + 50 * stackpath[1].top().y));
-
-					}
-					else
-						PLAYER[3].have_des = 0;
-
-					if (bot_no2.GetPosition() == sf::Vector2f((float)PLAYER[3].des_x * 50 + battle_table_x, (float)PLAYER[3].des_y * 50 + battle_table_y) || stackpath[1].empty())
-					{
-						bot_no2.planting = 1;
-						PLAYER[3].have_des = 0;
-					}
-					if (bot_no2.planting && PLAYER[3].used_bomb + 1 <= PLAYER[3].bomb)
-					{
-						bot_no2.planting = 0;
-						check_set_bombPosition(bot_no2.GetPosition(), global_time, 3);
-
-					}
-					bot_no2.planting = 0;
-					bot2.launch();
+						bot_no2.Update(deltaTime, PLAYER[3].switch_time, PLAYER[3].speed, bot_no2.GetPosition(), sf::Vector2f((float)battle_table_x + 50 * stackpath[1].top().x, (float)battle_table_y + 50 * stackpath[1].top().y));
 
 				}
-				if (PLAYER[4].is_die == 0)
+				else
+					PLAYER[3].have_des = 0;
+
+				if (bot_no2.GetPosition() == sf::Vector2f((float)PLAYER[3].des_x * 50 + battle_table_x, (float)PLAYER[3].des_y * 50 + battle_table_y) || stackpath[1].empty())
 				{
-
-					if (PLAYER[4].have_des == 0 && stackpath[2].size() == 0)
-					{
-						bot3_find_path(bot_no3.GetPosition());
-					}
-					//printf("%d %d\n", PLAYER[2].des_y, PLAYER[2].des_x);
-					if (!stackpath[2].empty())
-					{
-						if (is_same_pos(bot_no3.GetPosition(), sf::Vector2f((float)battle_table_x + 50 * stackpath[2].top().x, (float)battle_table_y + 50 * stackpath[2].top().y)))
-							stackpath[2].pop();
-						if (!stackpath[2].empty())
-							bot_no3.Update(deltaTime, PLAYER[4].switch_time, PLAYER[4].speed, bot_no3.GetPosition(), sf::Vector2f((float)battle_table_x + 50 * stackpath[2].top().x, (float)battle_table_y + 50 * stackpath[2].top().y));
-
-					}
-					else
-						PLAYER[4].have_des = 0;
-
-					if (bot_no3.GetPosition() == sf::Vector2f((float)PLAYER[4].des_x * 50 + battle_table_x, (float)PLAYER[4].des_y * 50 + battle_table_y) || stackpath[2].empty())
-					{
-						bot_no3.planting = 1;
-						PLAYER[4].have_des = 0;
-					}
-					if (bot_no3.planting && PLAYER[4].used_bomb + 1 <= PLAYER[4].bomb)
-					{
-						bot_no3.planting = 0;
-						check_set_bombPosition(bot_no3.GetPosition(), global_time, 4);
-
-					}
-					bot_no3.planting = 0;
-					bot3.launch();
+					bot_no2.planting = 1;
+					PLAYER[3].have_des = 0;
+				}
+				if (bot_no2.planting && PLAYER[3].used_bomb + 1 <= PLAYER[3].bomb)
+				{
+					bot_no2.planting = 0;
+					check_set_bombPosition(bot_no2.GetPosition(), global_time, 3);
 
 				}
+				bot_no2.planting = 0;
+				bot2.launch();
 
-			
+			}
+			if (PLAYER[4].is_die == 0)
+			{
 
-		
+				if (PLAYER[4].have_des == 0 && stackpath[2].size() == 0)
+				{
+					bot3_find_path(bot_no3.GetPosition());
+				}
+				//printf("%d %d\n", PLAYER[2].des_y, PLAYER[2].des_x);
+				if (!stackpath[2].empty())
+				{
+					if (is_same_pos(bot_no3.GetPosition(), sf::Vector2f((float)battle_table_x + 50 * stackpath[2].top().x, (float)battle_table_y + 50 * stackpath[2].top().y)))
+						stackpath[2].pop();
+					if (!stackpath[2].empty())
+						bot_no3.Update(deltaTime, PLAYER[4].switch_time, PLAYER[4].speed, bot_no3.GetPosition(), sf::Vector2f((float)battle_table_x + 50 * stackpath[2].top().x, (float)battle_table_y + 50 * stackpath[2].top().y));
+
+				}
+				else
+					PLAYER[4].have_des = 0;
+
+				if (bot_no3.GetPosition() == sf::Vector2f((float)PLAYER[4].des_x * 50 + battle_table_x, (float)PLAYER[4].des_y * 50 + battle_table_y) || stackpath[2].empty())
+				{
+					bot_no3.planting = 1;
+					PLAYER[4].have_des = 0;
+				}
+				if (bot_no3.planting && PLAYER[4].used_bomb + 1 <= PLAYER[4].bomb)
+				{
+					bot_no3.planting = 0;
+					check_set_bombPosition(bot_no3.GetPosition(), global_time, 4);
+
+				}
+				bot_no3.planting = 0;
+				bot3.launch();
+
+			}
+
+
 			generate_background(window, Map_number);
 			generate_immortal(window, player.GetCollider(), player2rd.GetCollider(), bot_no1.GetCollider(), Map_number);
 			generate_bomb(window,
@@ -1095,9 +1120,116 @@ int main()
 					bot3_lose.Draw(window);
 				}
 			}
-		}
-		
 			
+			sf::Texture menubar;
+			sf::Texture p1_pic[2], p2_pic[2], p3_pic[2], p4_pic[2];
+			sf::Texture menu_pause;
+
+			menubar.loadFromFile("./Sprite/InGame/MenuBar/MenuBar.png");
+			p1_pic[1].loadFromFile("./Sprite/InGame/MenuBar/Character/WhiteDead.png");
+			p1_pic[0].loadFromFile("./Sprite/InGame/MenuBar/Character/White.png");
+			p2_pic[1].loadFromFile("./Sprite/InGame/MenuBar/Character/BlackDead.png");
+			p2_pic[0].loadFromFile("./Sprite/InGame/MenuBar/Character/Black.png");
+			p3_pic[1].loadFromFile("./Sprite/InGame/MenuBar/Character/RedDead.png");
+			p3_pic[0].loadFromFile("./Sprite/InGame/MenuBar/Character/Red.png");
+			p4_pic[1].loadFromFile("./Sprite/InGame/MenuBar/Character/BlueDead.png");
+			p4_pic[0].loadFromFile("./Sprite/InGame/MenuBar/Character/Blue.png");
+			menu_pause.loadFromFile("./Sprite/InGame/MenuBar/MenuButton/MenuButton.png");
+
+
+			MAP_outside_top menu_bar(&menubar, sf::Vector2f(900, 100), sf::Vector2f(195, 60));
+			MAP_outside_top p1_icon(&p1_pic[PLAYER[0].is_die], sf::Vector2f(85, 80), sf::Vector2f(115 +200 - 85/2, 70));
+			MAP_outside_top p2_icon(&p2_pic[!(PLAYER[1].is_die==0 || PLAYER[2].is_die==0)], sf::Vector2f(85, 80), sf::Vector2f(115 +400 - 85 / 2, 70));
+			MAP_outside_top p3_icon(&p3_pic[PLAYER[3].is_die], sf::Vector2f(85, 80), sf::Vector2f(115 + 600 - 85 / 2, 70));
+			MAP_outside_top p4_icon(&p4_pic[PLAYER[4].is_die], sf::Vector2f(85, 80), sf::Vector2f(115 + 800 - 85 / 2, 70));
+			MAP_outside_top butt(&menu_pause, sf::Vector2f(225, 75), sf::Vector2f(1030, 860));
+			
+			menu_bar.Draw(window);
+			p1_icon.Draw(window);
+			p2_icon.Draw(window);
+			p3_icon.Draw(window);
+			p4_icon.Draw(window);
+			butt.Draw(window);
+
+			int death_count = 0;
+			for (int i = 0; i < 5; i++)
+			{
+				death_count += PLAYER[i].is_die;
+				if (PLAYER[i].is_die == 0)
+					winner = i;
+			}
+			if (death_count >= 4 && win == 0)
+			{
+				win_time = global_time;
+				win = 1;
+			}
+			if(death_count >= 4  && win == 1 && global_time - win_time >= 2.0f)
+				screen = 6;
+
+			if (MousePos.x >= 1030 && MousePos.x <= 1030 + 225 && MousePos.y >= 860 && MousePos.y <= 860 + 75)
+				if (event.type == sf::Event::MouseButtonPressed)
+					if (event.mouseButton.button == sf::Mouse::Left)
+					{
+						first_time = 1;
+						screen = 0;
+					}
+			start_screen = 0;
+			
+		}
+
+		if (screen == 6)
+		{
+			sf::Texture Black_bg;
+			Black_bg.loadFromFile("./Sprite/Menu/Black.png");
+
+			MAP_outside_top black(&Black_bg, sf::Vector2f(1280, 960), sf::Vector2f(0, 0));
+			black.Draw(window);
+
+			start_screen += deltaTime;
+			if (start_screen > 3.0f) screen = 7;
+
+			winner_time = 0;
+		}
+
+		if (screen == 7)
+		{
+			sf::Texture winnerTexture;
+			sf::Texture bg;
+			sf::Texture menu_pause;
+
+			menu_pause.loadFromFile("./Sprite/InGame/MenuBar/MenuButton/MenuButton.png");
+			bg.loadFromFile("./Sprite/InGame/Winner/Background.png");
+			if (winner == 0)  winnerTexture.loadFromFile("./Sprite/InGame/Winner/WhiteWin.png");
+			if (winner == 1 || winner == 2)  winnerTexture.loadFromFile("./Sprite/InGame/Winner/BlackWin.png");
+			if (winner == 3)  winnerTexture.loadFromFile("./Sprite/InGame/Winner/RedWin.png");
+			if (winner == 4)  winnerTexture.loadFromFile("./Sprite/InGame/Winner/BlueWin.png");
+
+			
+			Lose player_lose(&winnerTexture, sf::Vector2f(640, 480), sf::Vector2u(6, 1),  1.5f / 6.0f);
+			LoseAnimation animation1(&PLAYER[0].Burning, sf::Vector2u(1, 6), 1.5f / 6.0f);
+			player_lose.Update(PLAYER[0].lose_time, global_time, 1.5f / 6.0f);
+			
+			MAP_outside_top butt(&menu_pause, sf::Vector2f(225, 75), sf::Vector2f(1030, 860));
+
+			MAP_outside_top bg_pic(&bg, sf::Vector2f(1280, 960), sf::Vector2f(0, 0));
+
+
+			bg_pic.Draw(window);
+			player_lose.Draw(window);
+			butt.Draw(window);
+
+			if (MousePos.x >= 1030 && MousePos.x <= 1030 + 225 && MousePos.y >= 860 && MousePos.y <= 860 + 75)
+				if (event.type == sf::Event::MouseButtonPressed)
+					if (event.mouseButton.button == sf::Mouse::Left)
+					{
+						first_time = 1;
+						screen = 0;
+					}
+			
+			winner_time += deltaTime;
+			if (winner_time >= 7.0f);
+			start_screen = 0;
+		}
 		
 		window.display();
 
