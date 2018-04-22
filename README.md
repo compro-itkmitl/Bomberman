@@ -59,7 +59,7 @@
 # ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Supervisor.png)Assistant Teachers
 | ผศ. ดร. กิติ์สุชาติ พสุภา | ผศ. ดร. ปานวิทย์ ธุวะนุติ |
 |--|--|
-| ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/AjKitsuchart.jpg) | ![](https://github.com/compro-itkmitl/Bomberman/picreadme/AjPanwit.jpg) |
+| ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/AjOng.jpg) | ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/AjPanwit.jpg) |
 
 รายงานนี้เป็นส่วนหนึ่งของวิชา Computer Programming (รหัสวิชา 06016206)
 
