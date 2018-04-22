@@ -220,7 +220,6 @@ void bot1_BFS(int num)
 				bot_table[num][i][j] = -1;
 			else
 				bot_table[num][i][j] = 0;
-			if
 		}
 	for (int i = 0; i < table_scale_height; i++)
 		for (int j = 0; j < table_scale_width; j++)
