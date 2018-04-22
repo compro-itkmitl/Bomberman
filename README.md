@@ -11,9 +11,10 @@
 หากผู้เล่นต้องการจะตั้งค่า เช่น ปิด/เปิดเสียงเพลง หรือเสียงเอฟเฟกต์ ก็สามารถเข้าไปตั้งค่าได้ที่เมนู Setting ครับ  
 ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Setting.png)  
 สามารถกดคลิกที่รูปสี่เหลี่ยม เพื่อติ๊กเครื่องหมายถูก หรือ นำเครื่องหมายออกเพื่อปิดได้  
-
+  
 หรือถ้าอยากออกจากเกมให้กดเลือกที่ปุ่ม Quit เมื่อกดที่ปุ่ม Quit ผู้เล่นจะได้พบกับ Bomberman ที่จะถามผู้เล่นว่าต้องการออกเกมหรือไม่? หากต้องการก็กด Yes หลังจากนั้นก็จะเป็นการปิดโปรแกรมครับ  
 ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Quit.png)  
+
 แต่ถ้าหากต้องการจะเล่นทันทีให้คลิกที่ Battle Mode !!  
 ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/BattleMode.png)  
 
@@ -21,6 +22,7 @@
 
 ## Battle Mode
 หากผู้เล่นกดเข้ามาใน Battle Mode แล้ว เกมจะให้ผู้เล่นทำการเลือกระหว่าง Singleplayer หรือ Multiplayer และเลือกแผนที่ครับ หลังจากเลือกโหมดเกมและแผนที่เรียบร้อยแล้วให้คลิกที่ปุ่ม Start ได้เลย ♥（ﾉ´∀`）  
+  
 ![ลุยๆๆๆ](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Start.png)  
 
 ## How To Play
@@ -31,13 +33,13 @@
 - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Object.png)สิ่งกีดขวางทั่วไป ตั้งอยู่ทั่วไปในแผนที่ เป็นวัตถุที่สามารถทำลายได้โดยใช้ระเบิด หากโชคดี ผู้เล่นจะได้รับไอเทมอีกด้วย !  
  - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Immortal.png)สิ่งกีดขวางที่เป็นอมตะ โดยจะตั้งปะปนอยู่กับสิ่งกีดขวางทั่วไป ไม่สามารถทำลายได้  
  - ไอเทม มีโอกาสพบได้จากการทำลายสิ่งกีดขวาง สามารถถูกทำลายได้ โดยจะแบ่งเป็น  
-       *- ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/bombup.png)เพิ่มจำนวนระเบิดที่สามารถวางได้พร้อมๆกัน  
-       - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/bombdown)ลดจำนวนระเบิดที่สามารถวางได้พร้อมๆกัน  
-       - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/fireup.png)เพิ่มระยะการระเบิดของผู้เล่นให้ไกลขึ้น  
-       - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/firedown.png)ลดระยะการระเบิดของผู้เล่นให้สั้นลง  
-       - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/speedup.png)เพิ่มความเร็วในการเคลื่อนที่ของผู้เล่น  
-       - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/speeddown.png)ลดความเร็วในการเคลื่อนที่ของผู้เล่น  
-       - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/piercebomb.png)ทำให้ระเบิดของผู้เล่นสามารถทำลายสิ่งกีดขวางได้ต่อเนื่อง (ระเบิดทะลุ)*  
+       *- ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/bombup.png) เพิ่มจำนวนระเบิดที่สามารถวางได้พร้อมๆกัน  
+       - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/bombdown.png) ลดจำนวนระเบิดที่สามารถวางได้พร้อมๆกัน  
+       - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/fireup.png) เพิ่มระยะการระเบิดของผู้เล่นให้ไกลขึ้น  
+       - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/firedown.png) ลดระยะการระเบิดของผู้เล่นให้สั้นลง  
+       - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/speedup.png) เพิ่มความเร็วในการเคลื่อนที่ของผู้เล่น  
+       - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/speeddown.png) ลดความเร็วในการเคลื่อนที่ของผู้เล่น  
+       - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/piercebomb.png) ทำให้ระเบิดของผู้เล่นสามารถทำลายสิ่งกีดขวางได้ต่อเนื่อง (ระเบิดทะลุ)*  
 
 ในการบังคับตัวละครนั้นผู้เล่นสามารถบังคับได้โดยใช้ปุ่มลูกศรบนคีย์บอร์ด เพื่อเคลื่อนที่ไปในทิศทางต่างๆ และ ปุ่ม Spacebar สำหรับการวางระเบิด  
 สำหรับผู้เล่นคนที่ 2 จะสามารถบังคับได้โดยใช้ปุ่ม W A S D เพื่อเคลื่อนที่ และปุ่ม Ctrl ทางด้านซ้ายมือของคีย์บอร์ดสำหรับการวางระเบิดครับ  
@@ -48,6 +50,7 @@
 ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Burn.png)
 
 ในการจบเกมนั้น ผู้เล่นจะต้องทำการสังหารผู้เล่นคนอื่นด้วยระเบิด จนเหลือแค่ตัวผู้เล่นคนเดียวเพื่อจบเกม และชนะได้ ! ( ⊙‿⊙)  
+  
 ![เย่ๆๆๆ](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Win.png)
 
 # ![](https://github.com/compro-itkmitl/Bomberman/picreadme/Human.png)Team Members
