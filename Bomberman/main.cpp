@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <typeinfo>
 #include <queue>
+#include <stack>
 #include "PlayerAnimation.h"
 #include "Player.h"
 #include "Player2rd.h"
@@ -90,7 +91,7 @@ typedef struct {
 
 	
 }Player_info;
-Player_info PLAYER[4] ;  //P1 P2 BOT BOT BOT
+Player_info PLAYER[5] ;  //P1 P2 BOT BOT BOT
 
 void set_player_info();
 
@@ -145,10 +146,11 @@ Sprite_MAP thisMAP[5];
 int check_pos_bomb_player(sf::Vector2f this_bomb, sf::Vector2f this_player);
 int set_fire_type(int y1, int x1, int y2, int x2, int fire);
 void generate_background(sf::RenderWindow& window, int map);
-void generate_immortal(sf::RenderWindow& window, Collider& player, Collider& player2rd, int map);
+void generate_immortal(sf::RenderWindow& window, Collider& player, Collider& player2rd, Collider& bot_no1, int map);
 void generate_bomb(sf::RenderWindow& window,
 	Collider& player, sf::Vector2f player_pos,
 	Collider& player2rd, sf::Vector2f player2rd_pos,
+	Collider& bot_no1, sf::Vector2f bot_no1_pos,
 	float cur_time);
 void set_table_to_ground(int y, int x);
 void add_bomb_to_queue(int y, int x, int type);
@@ -156,6 +158,7 @@ void add_block_to_queue(int y, int x, int type);
 void Fire_exploding(Explode_mark thisFireExploding,
 	Collider& player, sf::Vector2f player_pos,
 	Collider& player2rd, sf::Vector2f player2rd_pos,
+	Collider& bot_no1, sf::Vector2f bot_no1_pos,
 	sf::RenderWindow& window, float cur_time, int fire_type);
 void Bomb_exploding(Bomb_info thisBombExploding, sf::RenderWindow& window, float cur_time, int fire_type);
 void Block_exploding(Block_mark thisBlockExploding, sf::RenderWindow& window, float cur_time);
@@ -175,37 +178,273 @@ sf::Vector2f set_fire_pos(int y, int x);
 //---------------------------------------------------------------------------------------------------------------------------------------
 int Map_number = 0;
 
+typedef struct {
+	int x, y;
+}bfs_path;
+bfs_path tmpbfs[3], tempqbfs[3];
+queue<bfs_path> queueBFS[3];
+int bot_bfs_mark[3][30][30];
+struct bot_path{
+	int ex_x,x;
+	int ex_y,y;
+	int value;
+	int distance;
+	bool operator < (const bot_path & a) const {
+		if (value < a.value) return true;
+		else if (value > a.value) return false;
+		else if (distance < a.distance) return true;
+		else return false;
+	}
+
+};
+bot_path path_table[3][30][30], tempPath[3];
+priority_queue<bot_path> queueBotPath[3];
+int bot_table[3][30][30];
+
+typedef struct {
+	int x, y;
+}bot_path_stack;
+bot_path_stack tmpstack[3];
+stack<bot_path_stack> stackpath[3];
+int is_same_pos(sf::Vector2f cur, sf::Vector2f des);
+
+int bot_dir[4][2] = { { 1, 0 },{ 0, 1 },{ -1, 0 },{ 0, -1 } };
+void bot1_BFS(int num)
+{
+	//printf("%d", num);
+	int x, y;
+	for (int i = 0; i < table_scale_height; i++)
+		for (int j = 0; j < table_scale_width; j++)
+		{
+			if (table[i][j].object != 0)
+				bot_table[num][i][j] = -1;
+			else
+				bot_table[num][i][j] = 0;
+			if
+		}
+	for (int i = 0; i < table_scale_height; i++)
+		for (int j = 0; j < table_scale_width; j++)
+		{
+			if (table[i][j].object == 0)
+			{
+				for (int k = 0; k < 4; k++)
+				{
+					y = i + bot_dir[k][0];
+					x = j + bot_dir[k][1];
+					if (x >= 0 && x < table_scale_width && y >= 0 && y < table_scale_height)
+					{
+						if (table[y][x].object == 1 || table[y][x].object == 2)
+						{
+							bot_table[num][i][j] += 2;
+						}
+					}
+				}
+			}
+		}
+}
+
+void bot2_BFS(int num)
+{
+	printf("%d", num);
+	int x, y;
+	for (int i = 0; i < table_scale_height; i++)
+		for (int j = 0; j < table_scale_width; j++)
+			if (table[i][j].object != 0)
+				bot_table[num][i][j] = -1;
+			else
+				bot_table[num][i][j] = 0;
+	for (int i = 0; i < table_scale_height; i++)
+		for (int j = 0; j < table_scale_width; j++)
+		{
+			if (table[i][j].object == 0)
+			{
+				for (int k = 0; k < 4; k++)
+				{
+					y = i + bot_dir[k][0];
+					x = j + bot_dir[k][1];
+					if (x >= 0 && x < table_scale_width && y >= 0 && y < table_scale_height)
+					{
+						if (table[y][x].object == 1 || table[y][x].object == 2)
+						{
+							bot_table[num][i][j] += 1;
+						}
+					}
+				}
+			}
+		}
+}
+
+void bot3_BFS(int num)
+{
+	printf("%d", num);
+	int x, y;
+	for (int i = 0; i < table_scale_height; i++)
+		for (int j = 0; j < table_scale_width; j++)
+			if (table[i][j].object != 0)
+				bot_table[num][i][j] = -1;
+			else
+				bot_table[num][i][j] = 0;
+	for (int i = 0; i < table_scale_height; i++)
+		for (int j = 0; j < table_scale_width; j++)
+		{
+			if (table[i][j].object == 0)
+			{
+				for (int k = 0; k < 4; k++)
+				{
+					y = i + bot_dir[k][0];
+					x = j + bot_dir[k][1];
+					if (x >= 0 && x < table_scale_width && y >= 0 && y < table_scale_height)
+					{
+						if (table[y][x].object == 1 || table[y][x].object == 2)
+						{
+							bot_table[num][i][j] += 1;
+						}
+					}
+				}
+			}
+		}
+}
+
+void bot1_find_path(sf::Vector2f thisPosition)
+{
+	int num = 0;
+	for (int i = 0; i < table_scale_height; i++)
+		for (int j = 0; j < table_scale_width; j++)
+			if (Explode_table[i][j].set == 1)
+				bot_bfs_mark[num][i][j] = 1;
+			else
+				bot_bfs_mark[num][i][j] = 0;
+	thisPosition.x = ((thisPosition.x - battle_table_x + 25) / 50);
+	thisPosition.y = ((thisPosition.y - battle_table_y + 25) / 50);
+	int pos_x = (int)thisPosition.x, x;
+	int pos_y = (int)thisPosition.y, y;
+	//printf("cur pos - %d %d ", pos_y, pos_x);
+	bot_bfs_mark[num][pos_y][pos_x] = 1;
+
+	tmpbfs[num].x = pos_x;
+	tmpbfs[num].y = pos_y;
+	queueBFS[num].push(tmpbfs[num]);
+
+	
+	path_table[num][pos_y][pos_x].x = path_table[num][pos_y][pos_x].ex_x = pos_x;
+	path_table[num][pos_y][pos_x].y = path_table[num][pos_y][pos_x].ex_y = pos_y;
+	path_table[num][pos_y][pos_x].distance = path_table[num][pos_y][pos_x].value = 0;
+
+	
+	tempPath[num].x = tempPath[num].ex_x = pos_x;
+	tempPath[num].y = tempPath[num].ex_y = pos_y;
+	tempPath[num].value = 0;
+	tempPath[num].distance = 0;
+	queueBotPath[num].push(tempPath[num]);
+	
+	
+
+	while (!queueBFS[num].empty())
+	{
+		tempqbfs[num] = queueBFS[num].front();
+		queueBFS[num].pop();
+
+		for (int k = 0; k < 4; k++)
+		{
+			x = tempqbfs[num].x + bot_dir[k][0];
+			y = tempqbfs[num].y + bot_dir[k][1];
+			if (x >= 0 && x < table_scale_width && y >= 0 && y < table_scale_height)
+			{
+				if (table[y][x].object == 0 && bot_bfs_mark[num][y][x] == 0)
+				{
+					//printf("%d %d\n", x, y);
+					bot_bfs_mark[num][y][x] = 1;
+
+					tempPath[num].x = x;
+					tempPath[num].y = y;
+					tempPath[num].ex_x = tempqbfs[num].x;
+					tempPath[num].ex_y = tempqbfs[num].y;
+					tempPath[num].value = bot_table[num][y][x];
+					tempPath[num].distance = abs(tempPath[num].x - tempPath[num].ex_x) + abs(tempPath[num].y - tempPath[num].ex_y);
+					queueBotPath[num].push(tempPath[num]);
+
+					path_table[num][y][x] = tempPath[num];
+
+					tmpbfs[num].x = x;
+					tmpbfs[num].y = y;
+					queueBFS[num].push(tmpbfs[num]);
+				}
+			}
+		}
+	}
+
+	tempPath[num] = queueBotPath[num].top();
+	while (!queueBotPath[num].empty()) queueBotPath[num].pop();
+
+	PLAYER[num + 1].have_des = 1;
+	PLAYER[num + 1].des_x = tempPath[num].x;
+	PLAYER[num + 1].des_y = tempPath[num].y;
+	//printf("have des - %d %d\n", PLAYER[num + 1].des_x, PLAYER[num + 1].des_y);
+
+	while (!stackpath[num].empty()) stackpath[num].pop();
+
+	tmpstack[num].x = PLAYER[num + 1].des_x;
+	tmpstack[num].y = PLAYER[num + 1].des_y;
+	stackpath[num].push(tmpstack[num]);
+
+	while (1)
+	{
+		if (tempPath[num].x == tempPath[num].ex_x && tempPath[num].y == tempPath[num].ex_y) break;
+		
+		tmpstack[num].x = tempPath[num].x;
+		tmpstack[num].y = tempPath[num].y;
+		stackpath[num].push(tmpstack[num]);
+
+		tempPath[num] = path_table[num][tempPath[num].ex_y][tempPath[num].ex_x];
+		printf("stack - %d %d\n", tmpstack[num].y, tmpstack[num].x);
+	}
+
+
+	if (!stackpath[num].empty())
+	{
+		PLAYER[num + 1].des_x = stackpath[num].top().x;
+		PLAYER[num + 1].des_y = stackpath[num].top().y;
+	}
+	printf("have des - %d %d\n", PLAYER[num + 1].des_y, PLAYER[num + 1].des_x);
+	
+}
 
 int main()
 {
 	
-	set_sprite_map();
+	
 
 	printf("Start Program!!\n");
-	sf::RenderWindow window(sf::VideoMode(resolution_x, resolution_y), "SFML works!", sf::Style::Close | sf::Style::Fullscreen);
+	sf::RenderWindow window(sf::VideoMode(resolution_x, resolution_y), "SFML works!", sf::Style::Close | sf::Style::Resize);
 
 	
 	PLAYER[0].playerTexture.loadFromFile("./Sprite/Bomberman/WhitePlayer.png");
 	PLAYER[1].playerTexture.loadFromFile("./Sprite/Bomberman/BlackPlayer.png");
 	PLAYER[2].playerTexture.loadFromFile("./Sprite/Bomberman/RedPlayer.png");
 	PLAYER[3].playerTexture.loadFromFile("./Sprite/Bomberman/BluePlayer.png");
+	PLAYER[4].playerTexture.loadFromFile("./Sprite/Bomberman/GreenPlayer.png");
 	PLAYER[0].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
 	PLAYER[1].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
 	PLAYER[2].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
 	PLAYER[3].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
-	PLAYER[3].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
+	PLAYER[4].Burning.loadFromFile("./Sprite/Bomberman/Burning.png");
 	set_player_info();
 
-	Player player(&PLAYER[0].playerTexture, sf::Vector2u(3, 7), PLAYER[0].switch_time, PLAYER[0].speed, PLAYER[0].spawn_postion);
+	Player player(&PLAYER[0].playerTexture, sf::Vector2u(3, 7), PLAYER[0].switch_time, (float)PLAYER[0].speed, PLAYER[0].spawn_postion);
 	PlayerAnimation animation(&PLAYER[0].playerTexture, sf::Vector2u(3, 7), PLAYER[0].switch_time);
 
-	Player2rd player2rd(&PLAYER[1].playerTexture, sf::Vector2u(3, 7), PLAYER[1].switch_time, PLAYER[1].speed, PLAYER[1].spawn_postion);
+	Player2rd player2rd(&PLAYER[1].playerTexture, sf::Vector2u(3, 7), PLAYER[1].switch_time, (float)PLAYER[1].speed, PLAYER[1].spawn_postion);
 	PlayerAnimation animation2rd(&PLAYER[1].playerTexture, sf::Vector2u(3, 7), PLAYER[1].switch_time);
+	PLAYER[1].is_die = 1;
 	
+	BOT1 bot_no1(&PLAYER[2].playerTexture, sf::Vector2u(3, 7), PLAYER[2].switch_time, (float)PLAYER[2].speed, PLAYER[2].spawn_postion);
+	PlayerAnimation animationbot_no1(&PLAYER[2].playerTexture, sf::Vector2u(3, 7), PLAYER[2].switch_time);
+
 	float global_time = 0;
 	float deltaTime = 0.0f;
 	sf::Clock clock;
 
+	set_sprite_map();
 	generate_map();
 	player.planting = 0;
 	player2rd.planting = 0;
@@ -232,38 +471,84 @@ int main()
 			}
 			*/
 		}
+
+
+
 		if (PLAYER[0].is_die == 0)
 		{
-			player.Update(deltaTime, PLAYER[0].switch_time); //deltaTime , switch time
+			player.Update(deltaTime, PLAYER[0].switch_time, PLAYER[0].speed); //deltaTime , switch time
 			if (player.planting && PLAYER[0].used_bomb+1 <= PLAYER[0].bomb)
 			{
 				player.planting = 0;
-				sf::Vector2f currentPosition = check_set_bombPosition(player.GetPosition(),  global_time, 0);
+				check_set_bombPosition(player.GetPosition(),  global_time, 0);
 			}
 			player.planting = 0;
 		}
 
 		if (PLAYER[1].is_die == 0)
 		{
-			player2rd.Update(deltaTime, PLAYER[1].switch_time); //deltaTime , switch time
+			player2rd.Update(deltaTime, PLAYER[1].switch_time, PLAYER[1].speed); //deltaTime , switch time
 			if (player2rd.planting && PLAYER[1].used_bomb + 1 <= PLAYER[1].bomb)
 			{
 				player2rd.planting = 0;
-				sf::Vector2f currentPosition = check_set_bombPosition(player2rd.GetPosition(), global_time, 1);
+				check_set_bombPosition(player2rd.GetPosition(), global_time, 1);
 			}
 			player2rd.planting = 0;
 		}
 
+		sf::Thread bot1(&bot1_BFS, 0);
+		sf::Thread bot2(&bot2_BFS, 1);
+		sf::Thread bot3(&bot3_BFS, 2);
+
+
+			if (PLAYER[2].is_die == 0)
+			{
+
+				if (PLAYER[2].have_des == 0 && stackpath[0].size() == 0)
+				{
+					bot1_find_path(bot_no1.GetPosition());
+				}
+				//printf("%d %d\n", PLAYER[2].des_y, PLAYER[2].des_x);
+				if (!stackpath[0].empty())
+				{
+					if (is_same_pos(bot_no1.GetPosition(), sf::Vector2f((float)battle_table_x + 50 * stackpath[0].top().x, (float)battle_table_y + 50 * stackpath[0].top().y)))
+						stackpath[0].pop();
+					if (!stackpath[0].empty())
+					bot_no1.Update(deltaTime, PLAYER[2].switch_time, PLAYER[2].speed, bot_no1.GetPosition(), sf::Vector2f((float)battle_table_x + 50 * stackpath[0].top().x, (float)battle_table_y + 50 * stackpath[0].top().y));
+
+				}
+				else
+					PLAYER[2].have_des = 0;
+
+				if (bot_no1.GetPosition() == sf::Vector2f((float)PLAYER[2].des_x * 50 + battle_table_x, (float)PLAYER[2].des_y * 50 + battle_table_y) || stackpath[0].empty())
+				{
+					bot_no1.planting = 1;
+					PLAYER[2].have_des = 0;
+				}
+				if (bot_no1.planting && PLAYER[2].used_bomb + 1 <= PLAYER[2].bomb)
+				{
+					player2rd.planting = 0;
+					check_set_bombPosition(bot_no1.GetPosition(), global_time, 2);
+					
+				}
+				bot_no1.planting = 0;
+				bot1.launch();
+
+			}
+
 		
-		//printf("%d/%d\n", PLAYER[0].used_bomb, PLAYER[0].bomb);
+		//bot2.launch();
+		//bot3.launch();
+
 		window.clear(sf::Color::Green);
 
 		
 		generate_background(window, Map_number);
-		generate_immortal(window, player.GetCollider(), player2rd.GetCollider(), Map_number);
+		generate_immortal(window, player.GetCollider(), player2rd.GetCollider(), bot_no1.GetCollider(), Map_number);
 		generate_bomb(window,
 			player.GetCollider(), player.GetPosition(),
 			player2rd.GetCollider(), player2rd.GetPosition(),
+			bot_no1.GetCollider(), bot_no1.GetPosition(),
 			global_time);
 
 		if (PLAYER[0].is_die == 0)
@@ -274,7 +559,7 @@ int main()
 		{
 			if (global_time - PLAYER[0].lose_time <= 1.50f)
 			{
-				printf("%f %f\n", global_time, PLAYER[0].lose_time);
+				//printf("%f %f\n", global_time, PLAYER[0].lose_time);
 				Lose player_lose(&PLAYER[0].Burning, PLAYER[0].lose_position, sf::Vector2u(10, 1), 1.5f / 10.0f);
 				LoseAnimation animation(&PLAYER[0].Burning, sf::Vector2u(1, 10), 1.5f / 10.0f);
 				player_lose.Update(PLAYER[0].lose_time, global_time, 1.5f / 10.0f);
@@ -290,15 +575,27 @@ int main()
 		{
 			if (global_time - PLAYER[1].lose_time <= 1.50f)
 			{
-				printf("%f %f\n", global_time, PLAYER[1].lose_time);
+				//printf("%f %f\n", global_time, PLAYER[1].lose_time);
 				Lose player2rd_lose(&PLAYER[1].Burning, PLAYER[1].lose_position, sf::Vector2u(10, 1), 1.5f / 10.0f);
 				LoseAnimation animation(&PLAYER[1].Burning, sf::Vector2u(1, 10), 1.5f / 10.0f);
 				player2rd_lose.Update(PLAYER[1].lose_time, global_time, 1.5f / 10.0f);
 				player2rd_lose.Draw(window);
 			}
-			else
-			{
+		}
 
+		if (PLAYER[2].is_die == 0)
+		{
+			bot_no1.Draw(window);
+		}
+		else
+		{
+			if (global_time - PLAYER[2].lose_time <= 1.50f)
+			{
+				//printf("%f %f\n", global_time, PLAYER[1].lose_time);
+				Lose player2rd_lose(&PLAYER[2].Burning, PLAYER[2].lose_position, sf::Vector2u(10, 1), 1.5f / 10.0f);
+				LoseAnimation animation(&PLAYER[2].Burning, sf::Vector2u(1, 10), 1.5f / 10.0f);
+				player2rd_lose.Update(PLAYER[2].lose_time, global_time, 1.5f / 10.0f);
+				player2rd_lose.Draw(window);
 			}
 		}
 			
@@ -321,16 +618,11 @@ int main()
 void generate_bomb(sf::RenderWindow& window,
 	Collider& player, sf::Vector2f player_pos,
 	Collider& player2rd, sf::Vector2f player2rd_pos,
+	Collider& bot_no1, sf::Vector2f bot_no1_pos,
 	float cur_time)
 {
 	sf::Texture normalBombTexture;
 	sf::Texture itemTexture;
-	/*
-	if(type == 1)
-	normalBombTexture.loadFromFile("./Sprite/Bomb/normalBomb.png");
-	else
-	normalBombTexture.loadFromFile("./Sprite/Bomb/pierceBomb.png");
-	*/
 
 	for (int i = 0; i < table_scale_height; i++)
 		for (int j = 0; j < table_scale_width; j++)
@@ -356,6 +648,10 @@ void generate_bomb(sf::RenderWindow& window,
 						normalBomb.GetCollider().CheckCollision(player, 1.0f, 3, 1);
 					}
 					if (check_pos_bomb_player(normalBomb.GetPosition(), player2rd_pos))
+					{
+						normalBomb.GetCollider().CheckCollision(player2rd, 1.0f, 3, 1);
+					}
+					if (check_pos_bomb_player(normalBomb.GetPosition(), bot_no1_pos))
 					{
 						normalBomb.GetCollider().CheckCollision(player2rd, 1.0f, 3, 1);
 					}
@@ -410,13 +706,15 @@ void generate_bomb(sf::RenderWindow& window,
 					Fire_exploding(Explode_table[i][j],
 						player, player_pos,
 						player2rd, player2rd_pos,
+						bot_no1, bot_no1_pos,
 						window, cur_time, -1);
 				}
-				else if (count_down > 0.1f && count_down <= 0.2f)
+				else if (count_down > 0.1f && count_down <= 0.3f)
 				{
 					Fire_exploding(Explode_table[i][j],
 						player, player_pos,
 						player2rd, player2rd_pos,
+						bot_no1, bot_no1_pos,
 						window, cur_time, Explode_table[i][j].type);
 					if (Explode_table[i][j].set == 2)
 						Block_exploding(Block_table[i][j], window, cur_time);
@@ -452,7 +750,13 @@ void generate_bomb(sf::RenderWindow& window,
 					{
 						Item_mark_table[i][j].set = 0;
 						Item_mark_table[i][j].burn = 0;
-						player_got_item(Item_mark_table[i][j].type, 0);
+						player_got_item(Item_mark_table[i][j].type, 1);
+					}
+					if (thisItem.GetCollider().CheckCollision(bot_no1, 1.0f, 5, 1))
+					{
+						Item_mark_table[i][j].set = 0;
+						Item_mark_table[i][j].burn = 0;
+						player_got_item(Item_mark_table[i][j].type, 2);
 					}
 					thisItem.Draw(window);
 				}
@@ -482,13 +786,28 @@ void generate_bomb(sf::RenderWindow& window,
 
 void player_got_item(int type, int player_number)
 {
-	if (type == 1) PLAYER[player_number].bomb++;
-	if (type == 2) PLAYER[player_number].fire_range++;
-	if (type == 3 && PLAYER[player_number].speed < 200) PLAYER[player_number].speed+=10;
-	if (type == 4) PLAYER[player_number].bomb_type = 2;
-	if (type == 5 && PLAYER[player_number].bomb > 1) PLAYER[player_number].bomb--;
-	if (type == 6 && PLAYER[player_number].fire_range > 1) PLAYER[player_number].fire_range--;
-	if (type == 7 && PLAYER[player_number].speed > 100) PLAYER[player_number].speed-=10;
+	if (type == 1)
+		PLAYER[player_number].bomb++;
+	else if (type == 2)
+		PLAYER[player_number].fire_range++;
+	else if (type == 3 && PLAYER[player_number].speed < 200)
+		PLAYER[player_number].speed+=20;
+	else if (type == 4)
+		PLAYER[player_number].bomb_type = 2;
+	else if (type == 5 && PLAYER[player_number].bomb > 1)
+		PLAYER[player_number].bomb--;
+	else if (type == 6 && PLAYER[player_number].fire_range > 1)
+		PLAYER[player_number].fire_range--;
+	else if (type == 7 && PLAYER[player_number].speed > 100)
+		PLAYER[player_number].speed-=20;
+}
+
+int is_same_pos(sf::Vector2f cur, sf::Vector2f des)
+{
+	float dis = 1.0f;
+	if (abs(cur.x - des.x) < dis && abs(cur.y - des.y) < dis)return 1;
+	//printf("dis - %f %f\n", abs(cur.y - des.y), abs(cur.x - des.x));
+	return 0;
 }
 
 void find_fire_path(Bomb_info thisBombExploding, float cur_time, int y, int x)
@@ -559,6 +878,7 @@ void Block_exploding(Block_mark thisBlockExploding, sf::RenderWindow& window, fl
 void Fire_exploding(Explode_mark thisFireExploding ,
 	Collider& player, sf::Vector2f player_pos,
 	Collider& player2rd, sf::Vector2f player2rd_pos,
+	Collider& bot_no1, sf::Vector2f bot_no1_pos,
 	sf::RenderWindow& window, float cur_time, int fire_type)
 {
 	sf::Texture explodingBombTexture;
@@ -603,8 +923,8 @@ void Fire_exploding(Explode_mark thisFireExploding ,
 
 
 	BombExploding normalBomb(&explodingBombTexture, thisFireExploding.pos, sf::Vector2u(4, 1), 0.05f);
-	BombExplodingAnim bombAnimation(&explodingBombTexture, sf::Vector2u(1, 4), 0.025f);
-	normalBomb.Update(thisFireExploding.time, cur_time, 0.025f);
+	BombExplodingAnim bombAnimation(&explodingBombTexture, sf::Vector2u(1, 4), 0.05f);
+	normalBomb.Update(thisFireExploding.time, cur_time, 0.05f);
 	if (normalBomb.GetCollider().CheckCollision(player, 1.0f, 4, 1) && PLAYER[0].is_die == 0)
 	{
 		PLAYER[0].is_die = 1;
@@ -616,6 +936,12 @@ void Fire_exploding(Explode_mark thisFireExploding ,
 		PLAYER[1].is_die = 1;
 		PLAYER[1].lose_time = cur_time;
 		PLAYER[1].lose_position = player2rd_pos;
+	}
+	if (normalBomb.GetCollider().CheckCollision(bot_no1, 1.0f, 4, 1) && PLAYER[2].is_die == 0)
+	{
+		PLAYER[2].is_die = 1;
+		PLAYER[2].lose_time = cur_time;
+		PLAYER[2].lose_position = bot_no1_pos;
 	}
 	normalBomb.Draw(window);
 
@@ -725,8 +1051,8 @@ sf::Vector2f check_set_bombPosition(sf::Vector2f thisPosition, float cur_time, i
 	
 	if (table[pos_y][pos_x].object == 0)
 	{
-		Bomb_table[pos_y][pos_x].fire_range = PLAYER[0].fire_range;
-		Bomb_table[pos_y][pos_x].bomb_type = PLAYER[0].bomb_type;
+		Bomb_table[pos_y][pos_x].fire_range = PLAYER[own].fire_range;
+		Bomb_table[pos_y][pos_x].bomb_type = PLAYER[own].bomb_type;
 		Bomb_table[pos_y][pos_x].plant_time = cur_time;
 		Bomb_table[pos_y][pos_x].planted = 1;
 		Bomb_table[pos_y][pos_x].explode = 0;
@@ -769,7 +1095,7 @@ void generate_background(sf::RenderWindow& window, int map)
 		}
 }
 
-void generate_immortal(sf::RenderWindow& window, Collider& player, Collider& player2rd, int map)
+void generate_immortal(sf::RenderWindow& window, Collider& player, Collider& player2rd, Collider& bot_no1, int map)
 {
 	sf::Vector2f obj_scale = sf::Vector2f(60.0f, 70.0f);
 	sf::Vector2f obj_pos;
@@ -795,6 +1121,7 @@ void generate_immortal(sf::RenderWindow& window, Collider& player, Collider& pla
 				Immortal immortal(&thisMAP[map].Outside, obj_scale, obj_pos );
 				immortal.GetCollider().CheckCollision(player, 1.0f, 2, 1);
 				immortal.GetCollider().CheckCollision(player2rd, 1.0f, 2, 1);
+				immortal.GetCollider().CheckCollision(bot_no1, 1.0f, 2, 1);
 				immortal.Draw(window);
 			}
 			else 
@@ -804,6 +1131,7 @@ void generate_immortal(sf::RenderWindow& window, Collider& player, Collider& pla
 					MAP_OBJECT object(&thisMAP[map].Object, obj_scale, obj_pos );
 					object.GetCollider().CheckCollision(player, 1.0f, 2, 1);
 					object.GetCollider().CheckCollision(player2rd, 1.0f, 2, 1);
+					object.GetCollider().CheckCollision(bot_no1, 1.0f, 2, 1);
 					object.Draw(window);
 				}
 				else if (table[i][j].object == 99)
@@ -811,6 +1139,7 @@ void generate_immortal(sf::RenderWindow& window, Collider& player, Collider& pla
 					Immortal immortal(&thisMAP[map].immortal, obj_scale, obj_pos);
 					immortal.GetCollider().CheckCollision(player, 1.0f, 2, 1);
 					immortal.GetCollider().CheckCollision(player2rd, 1.0f, 2, 1);
+					immortal.GetCollider().CheckCollision(bot_no1, 1.0f, 2, 1);
 					immortal.Draw(window);
 				}
 			}
@@ -850,14 +1179,15 @@ void set_player_info()
 		int have_des;
 	}Player_info;
 	*/
-	sf::Vector2f player_spawn_pos[4] = {
+	sf::Vector2f player_spawn_pos[5] = {
 		sf::Vector2f((float)battle_table_x, (float)battle_table_y),
+		sf::Vector2f((float)battle_table_x + 20 * 50, (float)battle_table_y),
 		sf::Vector2f((float)battle_table_x + 20 * 50, (float)battle_table_y),
 		sf::Vector2f((float)battle_table_x, (float)battle_table_y + 10 *50),
 		sf::Vector2f((float)battle_table_x + 20 * 50, (float)battle_table_y + 10 * 50),
 	};
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		PLAYER[i].switch_time = 0.125f;
 		PLAYER[i].speed = 100;
@@ -892,6 +1222,9 @@ void add_block_to_queue(int y, int x, int type)
 	thisBlockPos.type = type;
 	queueBlockpos.push(thisBlockPos);
 }
+
+
+
 //---------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------

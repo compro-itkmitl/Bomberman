@@ -72,6 +72,9 @@
     <ClCompile Include="Destroy_item_Anim.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BOT1.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PlayerAnimation.h">
@@ -126,6 +129,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Destroy_item_Anim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BOT1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
