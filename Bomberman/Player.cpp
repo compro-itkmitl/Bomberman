@@ -22,9 +22,9 @@ Player::~Player()
 }
 
 
-void Player::Update(float deltaTime, float switchTime)
+void Player::Update(float deltaTime, float switchTime, int speed)
 {
-
+	this->speed = (float)speed;
 	sf::Vector2f movement(0.0f, 0.0f);
 	switchTime *= 9.5f;
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))	movement.x -= speed * deltaTime * switchTime;

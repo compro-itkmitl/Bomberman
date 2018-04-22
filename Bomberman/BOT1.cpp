@@ -23,19 +23,19 @@ BOT1::~BOT1()
 }
 
 
-void BOT1::Update(float deltaTime, float switchTime)
+void BOT1::Update(float deltaTime, float switchTime, int speed, sf::Vector2f curpos, sf::Vector2f despos)
 {
-
 	sf::Vector2f movement(0.0f, 0.0f);
 	switchTime *= 9.5f;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))	movement.x -= speed * deltaTime * switchTime;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))	movement.x += speed * deltaTime * switchTime;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))	movement.y -= speed * deltaTime * switchTime;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))	movement.y += speed * deltaTime * switchTime;
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-	{
-		planting = 1;
-	}
+	float botspeed = 0.75f;
+	float xx = abs(curpos.x - despos.x);
+	float yy = abs(curpos.y - despos.y);
+	float dis = 1.0f;
+		if (curpos.x > despos.x && xx > dis)	movement.x -= speed * deltaTime * switchTime * botspeed;
+		if (curpos.x < despos.x && xx > dis)	movement.x += speed * deltaTime * switchTime * botspeed;
+		if (curpos.y > despos.y && yy > dis)	movement.y -= speed * deltaTime * switchTime * botspeed;
+		if (curpos.y < despos.y && yy > dis)	movement.y += speed * deltaTime * switchTime * botspeed;
+	
 
 	if (movement.x == 0.0f && movement.y == 0.0f)
 	{
