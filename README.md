@@ -1,4 +1,4 @@
-# Introduction
+﻿# Introduction
 สวัสดีครับ วันนี้กลุ่ม Bomberman ของพวกเราได้ทำการสร้าง และพัฒนาโปรแกรมที่ชื่อว่า "Bomberman" ขึ้นมาโดยใช้ภาษา C++ 100% (เนื่องจาก Library SFML นั้นรองรับเฉพาะภาษา  C++) โดยตัวโปรแกรมนั้นเป็นเกมแนววางแผนที่สามารถเล่นได้จริง และรองรับผู้เล่นได้สูงสุด 2 ผู้เล่น สามารถนำไปใช้เล่นคนเดียวหรือเล่นกับเพื่อนเวลาว่างๆเพื่อความสนุก เพลิดเพลินได้ครับ
 ## How to install
 สามารถดาวน์โหลดไฟล์เกมได้จาก [ที่นี่](https://github.com/compro-itkmitl/Bomberman) เมื่อดาวน์โหลดเสร็จแล้วก็ให้แตกไฟล์ตามปกติ
@@ -58,7 +58,7 @@
 |--|--|--|--|--|
 | ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Net.png) | พิชญพล | เพชรบุญช่วย | [@TheNlesh](https://github.com/TheNlesh) | 60070062 |
 | ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Coke.png) | ฟุ้งเกียรติ | เผด็จตะคุ | [@CokeFung](https://github.com/CokeFung) | 60070069 |
-| ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Yut.png) | ยุทธนา | ศรีธรมมบุญ | [@SriYUTHA](https://github.com/SriYUTHA) | 60070078|
+| ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Yut.png) | ยุทธนา | ศรีทำบุญ | [@SriYUTHA](https://github.com/SriYUTHA) | 60070078|
 # ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Supervisor.png)Assistant Teachers
 | ผศ. ดร. กิติ์สุชาต พสุภา | ผศ. ดร. ปานวิทย์ ธุวะนุติ |
 |--|--|
