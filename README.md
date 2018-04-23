@@ -28,7 +28,7 @@
 ## How To Play
 
 เมื่อกด Start เรียบร้อยแล้ว ผู้เล่นจะถูกส่งเข้ามาในแผนที่ โดยในแผนที่จะมีตัวละครทั้งหมด 4 ตัว นอกเหนือจากผู้เล่น ที่เหลือจะเป็นบอทครับ  
-![](https://github.com/compro-itkmitl/Bomberman/picreadme/blob/master/Ingame.png)
+![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Ingame.png)
 และวัตถุต่างๆในแผนที่ทั้งหมดจะประกอบไปด้วย  
 - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Object.png)สิ่งกีดขวางทั่วไป ตั้งอยู่ทั่วไปในแผนที่ เป็นวัตถุที่สามารถทำลายได้โดยใช้ระเบิด หากโชคดี ผู้เล่นจะได้รับไอเทมอีกด้วย !  
  - ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Immortal.png)สิ่งกีดขวางที่เป็นอมตะ โดยจะตั้งปะปนอยู่กับสิ่งกีดขวางทั่วไป ไม่สามารถทำลายได้  
@@ -53,14 +53,14 @@
   
 ![เย่ๆๆๆ](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Win.png)
 
-# ![](https://github.com/compro-itkmitl/Bomberman/picreadme/Human.png)Team Members
+# ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Human.png)Team Members
 |  | ชื่อ | นามสกุล | GitHub Username | รหัสนักศึกษา |
 |--|--|--|--|--|
 | ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Net.png) | พิชญพล | เพชรบุญช่วย | [@TheNlesh](https://github.com/TheNlesh) | 60070062 |
 | ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Coke.png) | ฟุ้งเกียรติ | เผด็จตะคุ | [@CokeFung](https://github.com/CokeFung) | 60070069 |
 | ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Yut.png) | ยุทธนา | ศรีธรมมบุญ | [@SriYUTHA](https://github.com/SriYUTHA) | 60070078|
 # ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/Supervisor.png)Assistant Teachers
-| ผศ. ดร. กิติ์สุชาติ พสุภา | ผศ. ดร. ปานวิทย์ ธุวะนุติ |
+| ผศ. ดร. กิติ์สุชาต พสุภา | ผศ. ดร. ปานวิทย์ ธุวะนุติ |
 |--|--|
 | ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/AjOng.jpg) | ![](https://github.com/compro-itkmitl/Bomberman/blob/master/picreadme/AjPanwit.jpg) |
 
