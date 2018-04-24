@@ -627,7 +627,7 @@ void bot3_find_path(sf::Vector2f thisPosition)
 int main()
 {
 	printf("Start Program!!\n");
-	sf::RenderWindow window(sf::VideoMode(resolution_x, resolution_y), "Bomberman", sf::Style::Close | sf::Style::Fullscreen);
+	sf::RenderWindow window(sf::VideoMode(resolution_x, resolution_y), "Bomberman", sf::Style::Fullscreen);
 	int winner;
 	float winner_time = 0.0f;
 	int first_time = 1;
